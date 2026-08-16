@@ -146,12 +146,15 @@ function dg_handle_upload($item)
 }
 
 /**
- * Remove a listing's files from storage when the listing goes.
+ * Remove a listing's files when the listing goes.
  *
- * The rows go with it through the foreign key's ON DELETE CASCADE, so only the stored
- * objects need chasing — and they have to be read before the listing is gone.
+ * `delete_item` is the one hook every deletion path reaches, because the seller's delete
+ * and the admin's both end at the model — but it runs after the listing row is gone. The
+ * rows here therefore carry no foreign key onto it, so that they are still readable at
+ * this point; see the note on the table definition. Files first, then the rows that name
+ * them, so a failure part-way leaves something pointing at whatever is left.
  *
- * @param array<string,mixed>|int $item
+ * @param array<string,mixed>|int $item an id, or a row, depending on the caller
  *
  * @return void
  */
@@ -164,6 +167,7 @@ function dg_delete_item($item)
 
     foreach (Files::forItem($itemId) as $row) {
         Storage::delete((string)$row['s_key']);
+        Files::delete((int)$row['pk_i_id']);
     }
 }
 

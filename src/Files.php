@@ -56,8 +56,15 @@ class Files
             . ' PRIMARY KEY (pk_i_id),'
             . ' UNIQUE KEY uq_token (s_token),'
             . ' UNIQUE KEY uq_key (s_key),'
-            . ' INDEX idx_item (fk_i_item_id),'
-            . ' FOREIGN KEY (fk_i_item_id) REFERENCES ' . DB_TABLE_PREFIX . 't_item (pk_i_id) ON DELETE CASCADE'
+            . ' INDEX idx_item (fk_i_item_id)'
+            // Deliberately no foreign key onto t_item. The only hook that fires on every
+            // deletion path — `delete_item`, run from the model, which is what both the
+            // seller's delete and an admin's eventually reach — runs *after* the listing
+            // row is gone. An ON DELETE CASCADE would therefore have taken these rows
+            // first, and they are the only record of where the stored files are, so every
+            // file would be stranded in the bucket with nothing left pointing at it.
+            // The rows outlive the listing by a moment instead, and the hook removes the
+            // files and then the rows.
             . ') ENGINE=InnoDB DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci'
         );
     }
