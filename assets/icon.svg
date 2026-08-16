@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Digital goods">
+  <rect width="64" height="64" rx="14" fill="#0b7269"/>
+  <path d="M20 14h16l10 10v26a2 2 0 0 1-2 2H20a2 2 0 0 1-2-2V16a2 2 0 0 1 2-2z" fill="#fff"/>
+  <path d="M36 14v10h10" fill="#cfe3e0"/>
+  <path d="M32 30v12m0 0-5-5m5 5 5-5" fill="none" stroke="#0b7269" stroke-width="3"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
