@@ -127,11 +127,10 @@ class Plugin
 
         Files::uninstall();
 
-        foreach (array('max_files', 'max_mb', 'allowed_ext', 'access', 'require_purchase', 'price_credits') as $key) {
-            \Preference::newInstance()->delete(
-                array('s_section' => self::PREF_SECTION, 's_name' => $key)
-            );
-        }
+        // The whole section, not a list of the keys this version happens to know about: a
+        // setting dropped by some later version would otherwise be left behind for good,
+        // with nothing that ever looks at it again.
+        \Preference::newInstance()->delete(array('s_section' => self::PREF_SECTION));
         osc_reset_preferences();
     }
 
