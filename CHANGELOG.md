@@ -42,6 +42,10 @@ First Shopclass release, rewritten from the Osclass plugin (1.1.0, 2013).
 - Settings for who may download, how many files a listing may carry, the largest file, and
   the accepted types.
 - An admin screen listing what has been attached and how often each file has been fetched.
+- **Attaching files can be sold.** Where the billing subsystem is present (Shopclass 6.2.0
+  and later), it registers as a per-listing upgrade a seller buys with credits, alongside
+  bump and highlight. Off by default, and every entry point is guarded on the subsystem
+  being there, so the plugin still runs — free — on 6.1.0.
 - A warning on the settings screen when files are being stored somewhere the web server
   hands out directly.
 

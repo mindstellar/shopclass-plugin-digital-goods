@@ -102,6 +102,10 @@ class Plugin
         osc_set_preference('max_mb', (string)self::DEFAULT_MAX_MB, self::PREF_SECTION, 'INTEGER');
         osc_set_preference('allowed_ext', self::DEFAULT_EXTENSIONS, self::PREF_SECTION, 'STRING');
         osc_set_preference('access', Access::REGISTERED, self::PREF_SECTION, 'STRING');
+        // Off by default: switching a plugin on should not start charging for something
+        // that was free a moment earlier.
+        osc_set_preference('require_purchase', '0', self::PREF_SECTION, 'INTEGER');
+        osc_set_preference('price_credits', '5', self::PREF_SECTION, 'INTEGER');
         osc_reset_preferences();
     }
 
@@ -123,7 +127,7 @@ class Plugin
 
         Files::uninstall();
 
-        foreach (array('max_files', 'max_mb', 'allowed_ext', 'access') as $key) {
+        foreach (array('max_files', 'max_mb', 'allowed_ext', 'access', 'require_purchase', 'price_credits') as $key) {
             \Preference::newInstance()->delete(
                 array('s_section' => self::PREF_SECTION, 's_name' => $key)
             );
@@ -167,6 +171,23 @@ class Plugin
         osc_set_preference('max_mb', (string)max(1, min(2048, Params::getParamInt('max_mb'))), self::PREF_SECTION, 'INTEGER');
         osc_set_preference('allowed_ext', implode(',', array_keys($extensions)), self::PREF_SECTION, 'STRING');
         osc_set_preference('access', $access, self::PREF_SECTION, 'STRING');
+
+        // Only writable where billing exists; otherwise the stored value stays 0 and the
+        // charge can never be switched on by editing the form.
+        if (Billing::available()) {
+            osc_set_preference(
+                'require_purchase',
+                Params::getParam('require_purchase') !== '' ? '1' : '0',
+                self::PREF_SECTION,
+                'INTEGER'
+            );
+            osc_set_preference(
+                'price_credits',
+                (string)max(1, Params::getParamInt('price_credits') ?: 5),
+                self::PREF_SECTION,
+                'INTEGER'
+            );
+        }
         osc_reset_preferences();
 
         osc_add_flash_ok_message(__('Settings saved', 'digital-goods'), 'admin');

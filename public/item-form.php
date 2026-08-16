@@ -15,6 +15,7 @@
  * decides whether a file is taken is Uploads::inspect(), which reads the bytes.
  */
 
+use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Plugin;
 use mindstellar\digitalgoods\Uploads;
 
@@ -24,8 +25,23 @@ if (!defined('ABS_PATH')) {
 
 $dgExtensions = Uploads::allowedExtensions();
 $dgAccept     = '.' . implode(',.', $dgExtensions);
+
+// On a new listing there is no id yet, so there is nothing to have bought against and the
+// upload is offered; the post is checked either way. On an existing one the upgrade is
+// what decides whether the field is worth showing.
+$dgItemId  = function_exists('osc_item_id') ? (int)osc_item_id() : 0;
+$dgMayAdd  = $dgItemId <= 0 || Billing::itemMayAttach($dgItemId);
+$dgBuyUrl  = $dgItemId > 0 ? Billing::checkoutUrl($dgItemId) : '';
 ?>
 <div class="dg-upload">
+<?php if (!$dgMayAdd) { ?>
+    <p class="dg-upload__locked">
+        <?php echo osc_esc_html(__('Attaching downloadable files to this listing has not been paid for.', 'digital-goods')); ?>
+        <?php if ($dgBuyUrl !== '') { ?>
+            <a href="<?php echo osc_esc_html($dgBuyUrl); ?>"><?php echo osc_esc_html(__('Buy it with credits', 'digital-goods')); ?></a>
+        <?php } ?>
+    </p>
+<?php } else { ?>
     <label class="dg-upload__label" for="dg_files">
         <?php echo osc_esc_html(__('Downloadable files', 'digital-goods')); ?>
     </label>
@@ -41,4 +57,5 @@ $dgAccept     = '.' . implode(',.', $dgExtensions);
             implode(', ', $dgExtensions)
         )); ?>
     </p>
+<?php } ?>
 </div>

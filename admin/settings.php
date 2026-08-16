@@ -14,6 +14,7 @@
  */
 
 use mindstellar\digitalgoods\Access;
+use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Plugin;
 use mindstellar\digitalgoods\Storage;
 use mindstellar\digitalgoods\Uploads;
@@ -97,6 +98,39 @@ $dgKnown   = array_keys(Uploads::typeMap());
             )); ?></span>
         </div>
     </div>
+
+    <?php if (Billing::available()) { ?>
+        <div class="form-row">
+            <div class="form-controls">
+                <label for="dg-require-purchase">
+                    <input type="checkbox" id="dg-require-purchase" name="require_purchase" value="1"
+                        <?php echo Billing::required() ? 'checked="checked"' : ''; ?> />
+                    <?php echo osc_esc_html(__('Charge the seller for attaching files', 'digital-goods')); ?>
+                </label>
+                <span class="help-block"><?php echo osc_esc_html(__(
+                    'Attaching files becomes a per-listing upgrade the seller buys with credits, alongside bump and highlight. Listings that already carry files keep them.',
+                    'digital-goods'
+                )); ?></span>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <label class="form-label" for="dg-price"><?php echo osc_esc_html(__('Credits per listing', 'digital-goods')); ?></label>
+            <div class="form-controls">
+                <input type="number" id="dg-price" name="price_credits" min="1" class="input-small"
+                       value="<?php echo (int)Billing::price(); ?>"/>
+            </div>
+        </div>
+    <?php } else { ?>
+        <div class="form-row">
+            <div class="form-controls">
+                <span class="help-block"><?php echo osc_esc_html(__(
+                    'Charging for attachments needs the billing subsystem, which arrived in Shopclass 6.2.0. Attaching files is free on this install.',
+                    'digital-goods'
+                )); ?></span>
+            </div>
+        </div>
+    <?php } ?>
 
     <div class="form-actions">
         <button type="submit" class="btn btn-submit"><?php echo osc_esc_html(__('Save', 'digital-goods')); ?></button>

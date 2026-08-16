@@ -26,6 +26,7 @@ Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issue
  */
 
 use mindstellar\digitalgoods\Access;
+use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Plugin;
 use mindstellar\digitalgoods\Storage;
@@ -90,7 +91,28 @@ function dg_handle_upload($item)
         return;
     }
 
-    $itemId    = (int)$item['pk_i_id'];
+    $itemId = (int)$item['pk_i_id'];
+
+    // Where the site charges for attachments, the listing needs the upgrade before any
+    // file is taken. Checked here rather than only on the form, because the form is not
+    // what decides — a post can arrive without it.
+    if (!Billing::itemMayAttach($itemId)) {
+        $anySent = false;
+        foreach ($files['error'] as $error) {
+            if ($error !== UPLOAD_ERR_NO_FILE) {
+                $anySent = true;
+                break;
+            }
+        }
+        if ($anySent) {
+            osc_add_flash_error_message(
+                __('Attaching files to this listing has not been paid for yet.', 'digital-goods')
+            );
+        }
+
+        return;
+    }
+
     $existing  = count(Files::forItem($itemId));
     $allowance = Plugin::maxFiles() - $existing;
     $problems  = array();
@@ -257,6 +279,10 @@ osc_add_route(
     'digital-goods/download/{key}',
     osc_plugin_folder(__FILE__) . 'public/download.php'
 );
+
+// Registered on init so the feature exists before anything reads the catalogue of what
+// credits buy. A no-op where billing is not present.
+osc_add_hook('init', array('mindstellar\digitalgoods\Billing', 'register'));
 
 osc_add_hook('init_admin', array('mindstellar\digitalgoods\Plugin', 'handleAdminPost'));
 osc_add_hook('admin_menu_init', 'dg_admin_menu');

@@ -43,6 +43,24 @@ Per-listing file count and per-file size are settings too; the size is additiona
 by what PHP will accept, since a limit above `upload_max_filesize` is a promise the server
 will not keep.
 
+## Charging for it
+
+Where the site has Shopclass's billing subsystem (6.2.0 and later), attaching files can be
+made a paid per-listing upgrade: the seller spends credits on it the same way they buy a
+bump or a highlight, and it appears alongside those wherever core lists what credits buy.
+
+It is **off by default** — turning a plugin on should not start charging for something that
+was free a moment before. Switch it on under Plugins → Digital Goods settings and set the
+price in credits. Listings that already carry files keep them.
+
+Core's billing is seller-side, so what is sold is the seller's ability to attach files to
+a listing. There is no buyer-side purchase: core has no checkout for one visitor buying
+from another, so this plugin does not pretend to offer one.
+
+On 6.1.0 there is no billing subsystem, none of this registers, and attaching files is
+free. That is why the plugin still declares `Requires Shopclass: 6.1.0` rather than
+demanding 6.2.0 for a feature that is optional.
+
 ## Where it applies
 
 Only in the categories you pick — the plugin list's **Configure** link opens the category
