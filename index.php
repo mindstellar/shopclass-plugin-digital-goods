@@ -4,7 +4,7 @@ Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
 Version: 2.0.0
-Author: Mindstellar Community
+Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
 Requires Shopclass: 6.1.0
@@ -16,7 +16,7 @@ Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issue
 /*
  * This file is part of the Digital Goods plugin for Shopclass.
  * Copyright (c) 2013 Osclass (original work, licensed under the Apache License 2.0)
- * Copyright (c) 2021-2026 Mindstellar Community
+ * Copyright (c) 2021-2026 Navjot Tomer (Mindstellar) and contributors
  *
  * Distributed under the GNU General Public License v3.0 or later. The original
  * Osclass code it derives from was licensed under the Apache License 2.0.
