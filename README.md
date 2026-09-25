@@ -3,6 +3,13 @@
 Lets a seller attach downloadable files to a listing — a manual, an ebook, a sample pack —
 and hands them to buyers through a link that decides who may have them.
 
+![Digital Goods settings in the Shopclass admin](assets/screenshot-1.png)
+
+## Install
+
+From the admin: **Plugins → Manage plugins → Browse**, find *Digital Goods*, then **Install**.
+Or: `php oc-cli.php market:install digital-goods`.
+
 ## How files are kept
 
 Uploads go through Shopclass's storage layer under a random key. Nothing about where a
@@ -32,6 +39,9 @@ One setting, under Plugins → Digital Goods settings:
 
 The seller always reaches their own files, whichever is chosen.
 
+**Plugins → Digital Goods downloads** lists every attached file, its listing, and how many
+times it was downloaded.
+
 ## What may be uploaded
 
 The admin lists the accepted extensions. An upload has to match its claimed extension when
@@ -53,13 +63,9 @@ It is **off by default** — turning a plugin on should not start charging for s
 was free a moment before. Switch it on under Plugins → Digital Goods settings and set the
 price in credits. Listings that already carry files keep them.
 
-Core's billing is seller-side, so what is sold is the seller's ability to attach files to
-a listing. There is no buyer-side purchase: core has no checkout for one visitor buying
-from another, so this plugin does not pretend to offer one.
+Only the seller pays, to attach files. There is no buyer-side purchase.
 
-On 6.1.0 there is no billing subsystem, none of this registers, and attaching files is
-free. That is why the plugin still declares `Requires Shopclass: 6.1.0` rather than
-demanding 6.2.0 for a feature that is optional.
+On 6.1.0 there is no billing subsystem, so attaching files is free.
 
 ## Where it applies
 
@@ -68,15 +74,12 @@ chooser. Files appear on the post and edit forms and on the listing itself.
 
 ## Requirements
 
-Shopclass 6.1.0 or newer, PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
+Shopclass 6.1.0 or newer (tested up to 6.4), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
 and enabled by default) for checking what an upload actually is.
 
 ## History
 
-Derived from the Osclass "Digital Goods" plugin (1.1.0, 2013). That version wrote uploads
-into a web-served directory under the uploader's own filename, decided what was allowed
-from a header the uploading client controls, and served files by joining the upload
-directory to a query parameter. See CHANGELOG.md.
+Rewritten from the Osclass "Digital Goods" plugin (1.1.0, 2013). See CHANGELOG.md for what changed.
 
 ## Licence
 
