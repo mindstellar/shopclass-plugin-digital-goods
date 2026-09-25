@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+### Changed
+
+- Tested up to Shopclass 6.4.
+
 ## 2.0.0
 
 First Shopclass release, rewritten from the Osclass plugin (1.1.0, 2013).

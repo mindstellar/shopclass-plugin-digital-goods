@@ -6,3 +6,4 @@ tests
 *.map
 *.zip
 .distignore
+assets/screenshot-*
