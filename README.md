@@ -69,7 +69,7 @@ On 6.1.0 there is no billing subsystem, so attaching files is free.
 
 ## Where it applies
 
-Only in the categories you pick — the plugin list's **Configure** link opens the category
+Only in the categories you pick — the **Settings** link next to it in **Plugins → Manage plugins** opens the category
 chooser. Files appear on the post and edit forms and on the listing itself.
 
 ## Requirements
