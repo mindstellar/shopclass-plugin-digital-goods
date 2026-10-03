@@ -1,9 +1,9 @@
 # Digital Goods
 
-Lets a seller attach downloadable files to a listing — a manual, an ebook, a sample pack —
+Lets a seller attach downloadable files to a listing (a manual, an ebook, a sample pack)
 and hands them to buyers through a link that decides who may have them.
 
-![Digital Goods settings in the Shopclass admin](assets/screenshot-1.png)
+![Digital Goods settings in the ShopClass admin](assets/screenshot-1.png)
 
 ## Install
 
@@ -12,7 +12,7 @@ Or: `php oc-cli.php market:install digital-goods`.
 
 ## How files are kept
 
-Uploads go through Shopclass's storage layer under a random key. Nothing about where a
+Uploads go through ShopClass's storage layer under a random key. Nothing about where a
 file is kept comes from the person who uploaded it, and the download address is a separate
 random token, so a published link says nothing about the storage layout.
 
@@ -55,11 +55,11 @@ will not keep.
 
 ## Charging for it
 
-Where the site has Shopclass's billing subsystem (6.2.0 and later), attaching files can be
+Where the site has ShopClass's billing subsystem (6.2.0 and later), attaching files can be
 made a paid per-listing upgrade: the seller spends credits on it the same way they buy a
 bump or a highlight, and it appears alongside those wherever core lists what credits buy.
 
-It is **off by default** — turning a plugin on should not start charging for something that
+It is **off by default**. Turning a plugin on should not start charging for something that
 was free a moment before. Switch it on under Plugins → Digital Goods settings and set the
 price in credits. Listings that already carry files keep them.
 
@@ -69,12 +69,12 @@ On 6.1.0 there is no billing subsystem, so attaching files is free.
 
 ## Where it applies
 
-Only in the categories you pick — the **Settings** link next to it in **Plugins → Manage plugins** opens the category
+Only in the categories you pick. The **Settings** link next to it in **Plugins → Manage plugins** opens the category
 chooser. Files appear on the post and edit forms and on the listing itself.
 
 ## Requirements
 
-Shopclass 6.1.0 or newer (tested up to 6.4), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
+ShopClass 6.1.0 or newer (tested up to 6.4), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
 and enabled by default) for checking what an upload actually is.
 
 ## History
