@@ -106,7 +106,28 @@ class Plugin
         // that was free a moment earlier.
         osc_set_preference('require_purchase', '0', self::PREF_SECTION, 'INTEGER');
         osc_set_preference('price_credits', '5', self::PREF_SECTION, 'INTEGER');
+        osc_set_preference('layout', (string)Storage::LAYOUT, self::PREF_SECTION, 'INTEGER');
         osc_reset_preferences();
+    }
+
+    /**
+     * Bring stored files up to the current layout. Runs on init; a no-op once done.
+     *
+     * A run that could not move every file leaves the setting alone, so the next request
+     * tries again.
+     *
+     * @return void
+     */
+    public static function upgrade()
+    {
+        if ((int)osc_get_preference('layout', self::PREF_SECTION) >= Storage::LAYOUT) {
+            return;
+        }
+
+        if (Storage::migrate()) {
+            osc_set_preference('layout', (string)Storage::LAYOUT, self::PREF_SECTION, 'INTEGER');
+            osc_reset_preferences();
+        }
     }
 
     /**
@@ -125,6 +146,7 @@ class Plugin
             }
         }
 
+        Storage::removeFolders();
         Files::uninstall();
 
         // The whole section, not a list of the keys this version happens to know about: a

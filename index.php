@@ -3,7 +3,7 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.0.1
+Version: 2.1.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
@@ -283,6 +283,7 @@ osc_add_route(
 // Registered on init so the feature exists before anything reads the catalogue of what
 // credits buy. A no-op where billing is not present.
 osc_add_hook('init', array('mindstellar\digitalgoods\Billing', 'register'));
+osc_add_hook('init', array('mindstellar\digitalgoods\Plugin', 'upgrade'));
 
 osc_add_hook('init_admin', array('mindstellar\digitalgoods\Plugin', 'handleAdminPost'));
 osc_add_hook('admin_menu_init', 'dg_admin_menu');

@@ -24,6 +24,7 @@
  */
 
 use mindstellar\digitalgoods\Access;
+use mindstellar\digitalgoods\Delivery;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Storage;
 
@@ -57,17 +58,31 @@ if (!Access::allows((int)$dgRow['fk_i_item_id'])) {
     exit;
 }
 
-Files::countDownload((int)$dgRow['pk_i_id']);
+$dgRange = (string)($_SERVER['HTTP_RANGE'] ?? '');
+if (Delivery::counts($dgRange)) {
+    Files::countDownload((int)$dgRow['pk_i_id']);
+}
 
-// A private object store can hand the file over itself, which keeps a large download off
-// the web server entirely. Anything else is streamed from here.
-$dgSigned = Storage::isPrivate() ? Storage::signedUrl($dgRow['s_key']) : '';
+$dgKey = (string)$dgRow['s_key'];
+
+// A file on this disk is streamed from here: the private folder is not served by the
+// web server, so this route is the only way to it.
+$dgPath = Storage::localPath($dgKey);
+if ($dgPath !== '') {
+    Delivery::sendFile($dgRow, $dgPath);
+}
+
+// A private bucket hands the file over itself, which keeps a large download off the web
+// server. The URL is signed and short-lived.
+$dgSigned = Storage::signedUrl($dgKey, (string)$dgRow['s_name']);
 if ($dgSigned !== '') {
     osc_redirect_to($dgSigned);
     exit;
 }
 
-$dgBytes = Storage::read($dgRow['s_key']);
+// A public bucket, or a signing failure: read through the adapter, so the object's
+// address is never shown.
+$dgBytes = Storage::readRemote($dgKey);
 if ($dgBytes === false) {
     header('HTTP/1.1 404 Not Found');
     osc_add_flash_error_message(__('That file is not available.', 'digital-goods'));
@@ -75,19 +90,4 @@ if ($dgBytes === false) {
     exit;
 }
 
-while (ob_get_level() > 0) {
-    ob_end_clean();
-}
-
-// The name is quoted and stripped of anything that could end the header early; the type
-// is the one recorded at upload from the file's own bytes, never from this request.
-$dgName = str_replace(array('"', "\r", "\n"), '', (string)$dgRow['s_name']);
-
-header('Content-Type: ' . (string)$dgRow['s_content_type']);
-header('Content-Disposition: attachment; filename="' . $dgName . '"');
-header('Content-Length: ' . strlen($dgBytes));
-header('X-Content-Type-Options: nosniff');
-header('Cache-Control: private, no-store');
-
-echo $dgBytes;
-exit;
+Delivery::sendBytes($dgRow, $dgBytes);

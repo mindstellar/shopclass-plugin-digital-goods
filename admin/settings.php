@@ -36,7 +36,7 @@ $dgKnown   = array_keys(Uploads::typeMap());
 <?php if (!Storage::isPrivate()) { ?>
     <div class="flashmessage flashmessage-warning">
         <p><?php echo osc_esc_html(__(
-            'Files are being stored in the uploads directory, which the web server hands out directly. The download link enforces who may download and counts each fetch, but it cannot stop someone who has the stored file\'s address from bypassing it. Configure remote storage with signed URLs under Settings → Storage for files that are genuinely private.',
+            'Files are being stored in a public bucket, which hands any file to whoever has its address. The download link never shows that address, but for files that are genuinely private turn on signed URLs under Settings → Storage.',
             'digital-goods'
         )); ?></p>
     </div>

@@ -13,69 +13,94 @@ namespace mindstellar\digitalgoods;
 use mindstellar\storage\StorageManager;
 
 /**
- * Where an attached file is kept, and how it is handed to a buyer.
+ * Where an attached file is kept.
  *
- * The original wrote uploads into oc-content/uploads/digitalgoods/ under a name built
- * from the uploader's own filename. Three things followed from that, and all three are
- * why this class exists:
+ * Every file is stored under a random key; the name the seller chose survives only as a
+ * label in the database.
  *
- *  - the directory is served by the web server, so the paid file was fetchable directly
- *    by URL — the download script, its access check and its counter were all optional;
- *  - the name came from the request, so an upload called `x.php` was written as `x.php`
- *    into a directory the server executes;
- *  - the download script then built the path it read from the query string, so the bytes
- *    served were chosen by the caller rather than by the database row.
+ *   remote storage   the file goes to the bucket. A private bucket hands it over with a
+ *                    short-lived signed URL; a public one is read and streamed by PHP.
+ *   local storage    the file goes to a folder the web server does not serve,
+ *                    oc-content/downloads/digital-goods/ (or DG_PRIVATE_PATH), and is
+ *                    streamed by the download route, which applies the access rule.
  *
- * Here the bytes go to core's storage layer under a random key, and the name the seller
- * chose survives only as a label in the database. Nothing about the stored location is
- * derived from anything a caller sends.
- *
- * Delivery depends on what the site has configured, which the storage layer already
- * models:
- *
- *   remote and private  the adapter issues a short-lived signed URL and the buyer is
- *                       redirected to it — the bytes never pass through PHP.
- *   anything else       the file is streamed by the download route, which is also the
- *                       only thing that can apply the access rule.
+ * Releases before 2.1.0 kept local files in oc-content/uploads/digital-goods/, which the
+ * web server serves. migrate() moves them; the key stays the same, only the folder changes.
  */
 class Storage
 {
-    /** Key prefix inside whichever adapter is in use. */
+    /** Key prefix inside whichever adapter or folder is in use. */
     public const PREFIX = 'digital-goods/';
 
+    /** Bumped when stored files have to be moved; see migrate(). */
+    public const LAYOUT = 2;
+
+    /** How long a signed bucket URL stays valid, in seconds. */
+    public const SIGNED_TTL = 300;
+
     /**
-     * The adapter to use: a remote one when the site has configured it, otherwise local.
+     * The remote adapter the site has made active, if any.
      *
      * @return \mindstellar\storage\StorageAdapter|null
      */
-    public static function adapter()
+    public static function remote()
     {
-        $manager = StorageManager::instance();
-
-        return $manager->remote() ?: $manager->adapter('local');
+        return StorageManager::instance()->remote();
     }
 
     /**
-     * Whether the configured destination keeps the file out of public reach on its own.
-     *
-     * Only a remote adapter serving signed URLs does. Local storage lives under the
-     * uploads directory and reports itself public, which is the case the warning on the
-     * settings screen is about.
+     * Whether new uploads stay out of public reach. Only a public bucket fails this: it
+     * serves any key to anyone who has it.
      *
      * @return bool
      */
     public static function isPrivate()
     {
-        $adapter = self::adapter();
+        $remote = self::remote();
 
-        return $adapter !== null && $adapter->isRemote() && !$adapter->isPublic();
+        return $remote === null || !$remote->isPublic();
+    }
+
+    /**
+     * The folder local files are kept in, with a trailing slash. Keys are relative to it.
+     *
+     * @return string
+     */
+    public static function privateRoot()
+    {
+        if (defined('DG_PRIVATE_PATH') && is_string(DG_PRIVATE_PATH) && DG_PRIVATE_PATH !== '') {
+            return rtrim(DG_PRIVATE_PATH, '/\\') . '/';
+        }
+
+        return CONTENT_PATH . 'downloads/';
+    }
+
+    /**
+     * The web-served folder releases before 2.1.0 used, with a trailing slash.
+     *
+     * @return string
+     */
+    public static function legacyRoot()
+    {
+        return UPLOADS_PATH;
+    }
+
+    /**
+     * Whether a key has the shape newKey() makes. Anything else never becomes a path.
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
+    public static function isKey($key)
+    {
+        return preg_match('#^digital-goods/\d+/[a-f0-9]{32}(\.[a-z0-9]+)?$#D', (string)$key) === 1;
     }
 
     /**
      * A storage key for a new upload.
      *
-     * Random rather than derived: the extension is kept only because some object stores
-     * infer a content type from it, and it is taken from the allowlist the upload was
+     * Random rather than derived: the extension comes from the allowlist the upload was
      * checked against, never from the submitted filename.
      *
      * @param int    $itemId
@@ -92,7 +117,7 @@ class Storage
     }
 
     /**
-     * Move an uploaded file into storage.
+     * Store an uploaded file.
      *
      * @param string $localPath   the temporary upload path
      * @param string $key
@@ -102,52 +127,249 @@ class Storage
      */
     public static function put($localPath, $key, $contentType)
     {
-        $adapter = self::adapter();
+        if (!self::isKey($key)) {
+            return false;
+        }
 
-        return $adapter !== null && $adapter->put($localPath, $key, $contentType);
+        $remote = self::remote();
+        if ($remote !== null) {
+            return $remote->put($localPath, $key, $contentType);
+        }
+
+        $target = self::privateRoot() . $key;
+        if (!self::prepareDir(dirname($target))) {
+            return false;
+        }
+
+        return @copy($localPath, $target);
     }
 
     /**
+     * Remove a stored file from wherever it is.
+     *
      * @param string $key
      *
-     * @return bool
+     * @return bool whether anything was removed
      */
     public static function delete($key)
     {
-        $adapter = self::adapter();
+        if (!self::isKey($key)) {
+            return false;
+        }
 
-        return $adapter !== null && $adapter->delete($key);
+        $removed = false;
+        foreach (array(self::privateRoot(), self::legacyRoot()) as $root) {
+            $path = $root . $key;
+            if (is_file($path) && !is_link($path) && @unlink($path)) {
+                $removed = true;
+                // Only succeeds once the listing's folder is empty.
+                @rmdir(dirname($path));
+            }
+        }
+
+        $remote = self::remote();
+        if ($remote !== null && $remote->delete($key)) {
+            $removed = true;
+        }
+
+        return $removed;
     }
 
     /**
-     * A signed URL for a private remote object, or '' when that is not how this site
-     * stores files.
+     * The local path of a stored file, or '' when it is not on this disk.
+     *
+     * A file the migration has not moved yet is still found in the old folder, so its
+     * download keeps working through the gate.
      *
      * @param string $key
      *
      * @return string
      */
-    public static function signedUrl($key)
+    public static function localPath($key)
     {
-        $adapter = self::adapter();
-        if ($adapter === null || !method_exists($adapter, 'presignedUrl')) {
+        if (!self::isKey($key)) {
             return '';
         }
 
-        return (string)$adapter->presignedUrl($key);
+        foreach (array(self::privateRoot(), self::legacyRoot()) as $root) {
+            $path = $root . $key;
+            if (is_file($path) && !is_link($path)) {
+                return $path;
+            }
+        }
+
+        return '';
     }
 
     /**
-     * The file's bytes, for the streaming path.
+     * A signed URL for an object in a private bucket, or '' when files are not kept that way.
+     *
+     * @param string $key
+     * @param string $filename the name the browser should save it under
+     *
+     * @return string
+     */
+    public static function signedUrl($key, $filename = '')
+    {
+        $remote = self::remote();
+        if ($remote === null || $remote->isPublic()) {
+            return '';
+        }
+
+        // downloadUrl() (Shopclass 6.4) also sets the saved name; presignedUrl() is older.
+        if ($filename !== '' && method_exists($remote, 'downloadUrl')) {
+            return (string)$remote->downloadUrl($key, self::SIGNED_TTL, $filename);
+        }
+        if (method_exists($remote, 'presignedUrl')) {
+            return (string)$remote->presignedUrl($key);
+        }
+
+        return '';
+    }
+
+    /**
+     * The bytes of a file in a public bucket. The adapter has no streaming read, so this
+     * one path still holds the file in memory.
      *
      * @param string $key
      *
      * @return string|false
      */
-    public static function read($key)
+    public static function readRemote($key)
     {
-        $adapter = self::adapter();
+        $remote = self::remote();
 
-        return $adapter === null ? false : $adapter->get($key);
+        return $remote === null ? false : $remote->get($key);
+    }
+
+    /**
+     * Move files left in the old web-served folder into the private one, then close the
+     * old folder. Safe to run again and from overlapping requests.
+     *
+     * @return bool whether nothing is left to move
+     */
+    public static function migrate()
+    {
+        $oldBase = self::legacyRoot() . self::PREFIX;
+        if (!is_dir($oldBase) || is_link(rtrim($oldBase, '/'))) {
+            return true;
+        }
+
+        $done = true;
+        foreach (glob($oldBase . '*', GLOB_ONLYDIR) ?: array() as $dir) {
+            foreach (glob($dir . '/*') ?: array() as $old) {
+                $key = self::PREFIX . basename($dir) . '/' . basename($old);
+                if (!self::isKey($key) || !is_file($old) || is_link($old)) {
+                    continue;
+                }
+                if (!self::moveOne($old, self::privateRoot() . $key)) {
+                    $done = false;
+                }
+            }
+            @rmdir($dir);
+        }
+
+        self::protect($oldBase);
+
+        return $done;
+    }
+
+    /**
+     * Move one file, falling back to copy-and-delete across filesystems.
+     *
+     * @param string $from
+     * @param string $to
+     *
+     * @return bool
+     */
+    private static function moveOne($from, $to)
+    {
+        if (!self::prepareDir(dirname($to))) {
+            return false;
+        }
+
+        // Moved already by an earlier or overlapping run: drop the copy left behind.
+        if (is_file($to) && filesize($to) === filesize($from)) {
+            return @unlink($from);
+        }
+
+        if (@rename($from, $to)) {
+            return true;
+        }
+
+        $partial = $to . '.part';
+        if (@copy($from, $partial) && filesize($partial) === filesize($from) && @rename($partial, $to)) {
+            return @unlink($from);
+        }
+        @unlink($partial);
+
+        return false;
+    }
+
+    /**
+     * Make a folder under the private root, closed to the web.
+     *
+     * @param string $dir
+     *
+     * @return bool whether it exists and can be written
+     */
+    private static function prepareDir($dir)
+    {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        self::protect(self::privateRoot() . self::PREFIX);
+
+        return is_dir($dir) && is_writable($dir);
+    }
+
+    /**
+     * Write an .htaccess that denies every request (Apache 2.4 and 2.2) and an empty
+     * index.php. nginx needs its own rule; see the README. A file already there is kept.
+     *
+     * @param string $dir with a trailing slash
+     *
+     * @return void
+     */
+    public static function protect($dir)
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $files = array(
+            'index.php' => "<?php\n",
+            '.htaccess' => "<IfModule mod_authz_core.c>\n    Require all denied\n</IfModule>\n"
+                . "<IfModule !mod_authz_core.c>\n    Order allow,deny\n    Deny from all\n</IfModule>\n",
+        );
+        foreach ($files as $name => $content) {
+            if (!is_file($dir . $name)) {
+                @file_put_contents($dir . $name, $content);
+            }
+        }
+    }
+
+    /**
+     * Remove the plugin's folders once their files are gone. Only empty folders and the
+     * two guard files protect() writes are removed.
+     *
+     * @return void
+     */
+    public static function removeFolders()
+    {
+        foreach (array(self::privateRoot(), self::legacyRoot()) as $root) {
+            $base = $root . self::PREFIX;
+            if (!is_dir($base) || is_link(rtrim($base, '/'))) {
+                continue;
+            }
+            foreach (glob($base . '*', GLOB_ONLYDIR) ?: array() as $dir) {
+                @rmdir($dir);
+            }
+            if (glob($base . '*', GLOB_ONLYDIR) === array()) {
+                @unlink($base . 'index.php');
+                @unlink($base . '.htaccess');
+                @rmdir($base);
+            }
+        }
     }
 }
