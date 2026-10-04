@@ -12,22 +12,76 @@ Or: `php oc-cli.php market:install digital-goods`.
 
 ## How files are kept
 
-Uploads go through ShopClass's storage layer under a random key. Nothing about where a
-file is kept comes from the person who uploaded it, and the download address is a separate
-random token, so a published link says nothing about the storage layout.
+Uploads are stored under a random key. Nothing about where a file is kept comes from the
+person who uploaded it, and the download address is a separate random token.
 
-Delivery depends on how the site stores files:
+| Storage | Where files go | Delivery |
+|---|---|---|
+| Local (default) | `oc-content/downloads/digital-goods/`, closed to the web | the download link streams the file |
+| S3 with signed URLs | the bucket | the download link redirects to a signed URL that lasts 5 minutes |
+| S3, public bucket | the bucket | the download link streams the file |
 
-| Storage | Delivery |
-|---|---|
-| Remote with signed URLs (S3 or compatible) | the download link redirects to a short-lived signed URL; the bytes never pass through PHP |
-| Local uploads directory | the download link streams the file |
+Every download goes through the download link, which applies the access rule and counts
+the fetch. A public bucket serves any file to whoever has its address; the link never
+shows that address, but turn on signed URLs for files that are genuinely private. The
+settings screen warns when a public bucket is in use.
 
-**For files that are genuinely private, configure remote storage with signed URLs.** The
-local uploads directory is served by the web server, so while the download link is the
-only thing that applies the access rule and counts a fetch, it cannot stop someone who
-already has the stored file's address from going straight to it. The settings screen says
-so when that is how the site is configured.
+### Closing the folder on nginx
+
+On Apache the plugin writes an `.htaccess` that denies the folder. nginx ignores
+`.htaccess`; add this to your server block (ShopClass's own Docker images already have it):
+
+```nginx
+location ^~ /oc-content/downloads/ {
+    deny all;
+}
+```
+
+To keep the files out of the web root entirely, set a folder in `config.php`:
+
+```php
+define('DG_PRIVATE_PATH', '/var/lib/shopclass-files');
+```
+
+Set it before files are uploaded, or move the `digital-goods` folder there when you set it.
+
+### Upgrading from 2.0.x
+
+2.0.x kept local files in `oc-content/uploads/digital-goods/`, which the web server
+serves. On the first request after the upgrade the plugin moves them to the new folder and
+closes the old one with an `.htaccess`. Download links do not change. A file that cannot
+be moved is still served through the download link, and the move is retried on the next
+request. On nginx you can also deny the old folder:
+
+```nginx
+location ^~ /oc-content/uploads/digital-goods/ {
+    deny all;
+}
+```
+
+### Faster downloads (optional)
+
+PHP streams files in chunks and answers byte ranges, so large files do not use memory. To
+let the web server send the file instead, set one of these in `config.php`.
+
+nginx:
+
+```nginx
+location ^~ /dg-private/ {
+    internal;
+    alias /path/to/site/oc-content/downloads/digital-goods/;
+}
+```
+
+```php
+define('DG_ACCEL_REDIRECT', '/dg-private/');
+```
+
+Apache with `mod_xsendfile` (`XSendFilePath` set to the folder):
+
+```php
+define('DG_XSENDFILE', true);
+```
 
 ## Who can download
 

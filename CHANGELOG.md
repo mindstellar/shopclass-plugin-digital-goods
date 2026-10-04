@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1.0
+
+### Security
+
+- Local files are stored in `oc-content/downloads/digital-goods/`, closed to the web, instead of the uploads folder, so a direct URL no longer skips the access rule.
+- Existing files are moved there on upgrade, and the old folder is closed with an `.htaccess`.
+
+### Changed
+
+- Downloads stream in chunks instead of loading the whole file into memory, and support byte ranges.
+- A private bucket's signed link sets the file name and lasts 5 minutes.
+- Optional `DG_PRIVATE_PATH`, `DG_ACCEL_REDIRECT` and `DG_XSENDFILE` settings in `config.php`.
+
 ## 2.0.1
 
 ### Changed
