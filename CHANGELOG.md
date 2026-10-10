@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1
+
+### Changed
+
+- Works with Shopclass 7.0 as well as 6.x.
+
 ## 2.1.0
 
 ### Security
