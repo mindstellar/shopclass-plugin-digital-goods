@@ -36,8 +36,23 @@ class Billing
      */
     public static function available()
     {
-        return function_exists('osc_register_billing_feature')
-            && class_exists('mindstellar\billing\ItemUpgrades');
+        return function_exists('osc_register_billing_feature') && self::upgrades() !== null;
+    }
+
+    /**
+     * Core's item upgrade store: ItemUpgradeStore from Shopclass 7.0, ItemUpgrades before it.
+     *
+     * @return string|null null when the install has neither
+     */
+    private static function upgrades()
+    {
+        foreach (array('mindstellar\\billing\\ItemUpgradeStore', 'mindstellar\\billing\\ItemUpgrades') as $class) {
+            if (class_exists($class)) {
+                return $class;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -95,7 +110,7 @@ class Billing
                 // No expiry: what was bought is the right to have attached these files,
                 // and taking the downloads away later from a listing that is still up
                 // would break a sale that already happened.
-                return \mindstellar\billing\ItemUpgrades::grant($itemId, self::FEATURE);
+                return self::upgrades()::grant($itemId, self::FEATURE);
             },
         ));
     }
@@ -115,7 +130,7 @@ class Billing
             return true;
         }
 
-        return \mindstellar\billing\ItemUpgrades::has((int)$itemId, self::FEATURE);
+        return self::upgrades()::has((int)$itemId, self::FEATURE);
     }
 
     /**
