@@ -179,7 +179,7 @@ class Plugin
      */
     public static function handleAdminPost()
     {
-        if (Params::getParamString('dg_action') !== 'save') {
+        if (Params::getParamString('dg_action') !== 'save' || osc_is_moderator()) {
             return;
         }
 

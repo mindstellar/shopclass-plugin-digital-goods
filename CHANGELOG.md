@@ -5,6 +5,7 @@
 ### Fixed
 
 - Categories are chosen on the plugin's settings page, so a saved choice shows where it was made.
+- A moderator can no longer save the plugin's settings.
 
 ## 2.1.1
 
