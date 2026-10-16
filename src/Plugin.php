@@ -24,6 +24,21 @@ class Plugin
     public const DEFAULT_EXTENSIONS = 'zip,7z,gz,pdf,epub';
     public const DEFAULT_MAX_FILES = 3;
     public const DEFAULT_MAX_MB = 32;
+    public const SHORT_NAME = 'digital-goods';
+
+    /**
+     * The ids of the categories the plugin is switched on for.
+     *
+     * @return int[]
+     */
+    public static function categoryIds()
+    {
+        $dao = method_exists('PluginCategory', 'getInstance')
+            ? \PluginCategory::getInstance()
+            : \PluginCategory::newInstance();
+
+        return array_map('intval', (array)$dao->listSelected(self::SHORT_NAME));
+    }
 
     /**
      * How many files one listing may carry.
@@ -164,7 +179,7 @@ class Plugin
      */
     public static function handleAdminPost()
     {
-        if (Params::getParamString('dg_action') !== 'save') {
+        if (Params::getParamString('dg_action') !== 'save' || osc_is_moderator()) {
             return;
         }
 
@@ -210,6 +225,12 @@ class Plugin
             );
         }
         osc_reset_preferences();
+
+        if (Params::getParamString('dg_categories') === '1') {
+            $categories = array_values(array_filter(array_map('intval', Params::getParamArray('categories'))));
+            \Plugins::cleanCategoryFromPlugin(self::SHORT_NAME);
+            \Plugins::addToCategoryPlugin($categories, self::SHORT_NAME);
+        }
 
         osc_add_flash_ok_message(__('Settings saved', 'digital-goods'), 'admin');
         osc_redirect_to(osc_admin_render_plugin_url(osc_plugin_folder(DG_PLUGIN_FILE) . 'admin/settings.php'));
