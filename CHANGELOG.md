@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.2
+
+### Fixed
+
+- Categories are chosen on the plugin's settings page, so a saved choice shows where it was made.
+
 ## 2.1.1
 
 ### Changed

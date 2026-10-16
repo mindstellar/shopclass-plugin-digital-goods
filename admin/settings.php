@@ -30,6 +30,7 @@ $dgRules = array(
 );
 $dgCurrent = Access::rule();
 $dgKnown   = array_keys(Uploads::typeMap());
+$dgCats    = Plugin::categoryIds();
 ?>
 <h2 class="render-title"><?php echo osc_esc_html(__('Digital Goods', 'digital-goods')); ?></h2>
 
@@ -48,6 +49,38 @@ $dgKnown   = array_keys(Uploads::typeMap());
     <input type="hidden" name="action" value="renderplugin"/>
     <input type="hidden" name="file" value="<?php echo osc_esc_html(osc_plugin_folder(DG_PLUGIN_FILE) . 'admin/settings.php'); ?>"/>
     <input type="hidden" name="dg_action" value="save"/>
+
+    <?php if ($dgCats === array()) { ?>
+        <div class="flashmessage flashmessage-warning">
+            <p><?php echo osc_esc_html(__('Sellers cannot attach files yet. Choose at least one category below.', 'digital-goods')); ?></p>
+        </div>
+    <?php } ?>
+
+    <?php if (function_exists('osc_admin_tree_picker')) { ?>
+        <input type="hidden" name="dg_categories" value="1"/>
+        <?php osc_admin_tree_picker(array(
+            'id'         => 'dg_category_tree',
+            'intro'      => __('Categories where sellers can attach files', 'digital-goods'),
+            'categories' => (method_exists('Category', 'getInstance') ? Category::getInstance() : Category::newInstance())->toTreeAll(),
+            'selected'   => $dgCats,
+        )); ?>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof oscTreeview === 'function') {
+                    oscTreeview(document.getElementById('dg_category_tree'), {collapsed: true});
+                }
+            });
+        </script>
+    <?php } else { ?>
+        <div class="form-row">
+            <label class="form-label"><?php echo osc_esc_html(__('Categories', 'digital-goods')); ?></label>
+            <div class="form-controls">
+                <a href="<?php echo osc_esc_html(osc_plugin_configure_url(osc_plugin_folder(DG_PLUGIN_FILE) . 'index.php')); ?>">
+                    <?php echo osc_esc_html(__('Choose the categories where sellers can attach files', 'digital-goods')); ?>
+                </a>
+            </div>
+        </div>
+    <?php } ?>
 
     <div class="form-row">
         <label class="form-label" for="dg-access"><?php echo osc_esc_html(__('Who can download', 'digital-goods')); ?></label>

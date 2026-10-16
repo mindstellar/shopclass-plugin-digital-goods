@@ -123,8 +123,8 @@ On 6.1.0 there is no billing subsystem, so attaching files is free.
 
 ## Where it applies
 
-Only in the categories you pick. The **Settings** link next to it in **Plugins → Manage plugins** opens the category
-chooser. Files appear on the post and edit forms and on the listing itself.
+Only in the categories you pick, at the top of **Plugins → Digital Goods settings** (on ShopClass 6.1 and 6.2, follow
+the link there). Files appear on the post and edit forms and on the listing itself.
 
 ## Requirements
 
