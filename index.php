@@ -257,13 +257,16 @@ function dg_admin_menu()
 }
 
 /**
- * Send the plugin list's Configure link to the category picker, which is what decides
- * where the plugin applies.
+ * Send the plugin list's Configure link to the settings page, which holds the category
+ * picker on 6.3 and later. Older cores have no picker helper, so they get core's own one.
  *
  * @return void
  */
 function dg_configure()
 {
+    if (function_exists('osc_admin_tree_picker')) {
+        osc_redirect_to(osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/settings.php'));
+    }
     osc_plugin_configure_view(osc_plugin_path(__FILE__));
 }
 
