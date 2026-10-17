@@ -3,12 +3,12 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.1.2
+Version: 2.2.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
-Requires Shopclass: 6.1.0
-Tested up to: 6.4
+Requires Shopclass: 6.4.0
+Tested up to: 7.0
 Requires PHP: 8.0
 Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issues
 */
@@ -233,7 +233,7 @@ function dg_item_detail()
 }
 
 /**
- * Admin menu entries.
+ * Admin menu entries, under the plugin's own heading.
  *
  * @return void
  */
@@ -242,37 +242,26 @@ function dg_admin_menu()
     osc_add_admin_submenu_divider('plugins', __('Digital Goods', 'digital-goods'), 'dg_divider', 'administrator');
     osc_add_admin_submenu_page(
         'plugins',
-        __('Digital Goods settings', 'digital-goods'),
-        osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/settings.php'),
-        'dg_settings',
+        __('Settings', 'digital-goods'),
+        osc_settings_page_url(Plugin::PREF_SECTION),
+        'settings-page-' . Plugin::PREF_SECTION,
         'administrator'
     );
     osc_add_admin_submenu_page(
         'plugins',
-        __('Digital Goods downloads', 'digital-goods'),
+        __('Downloads', 'digital-goods'),
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',
         'administrator'
     );
 }
 
-/**
- * Send the plugin list's Configure link to the settings page, which holds the category
- * picker on 6.3 and later. Older cores have no picker helper, so they get core's own one.
- *
- * @return void
- */
-function dg_configure()
-{
-    if (function_exists('osc_admin_tree_picker')) {
-        osc_redirect_to(osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/settings.php'));
-    }
-    osc_plugin_configure_view(osc_plugin_path(__FILE__));
-}
-
 osc_register_plugin(osc_plugin_path(__FILE__), array('mindstellar\digitalgoods\Plugin', 'install'));
 osc_add_hook(osc_plugin_path(__FILE__) . '_uninstall', array('mindstellar\digitalgoods\Plugin', 'uninstall'));
-osc_add_hook(osc_plugin_path(__FILE__) . '_configure', 'dg_configure');
+osc_add_hook(osc_plugin_path(__FILE__) . '_configure', static function () {
+    osc_redirect_to(osc_settings_page_url(Plugin::PREF_SECTION));
+});
+osc_register_settings_page(Plugin::PREF_SECTION, require __DIR__ . '/admin/settings.php');
 
 // The download link is a route, so the file that serves it is reached through the
 // application rather than by its path on disk.
@@ -288,7 +277,6 @@ osc_add_route(
 osc_add_hook('init', array('mindstellar\digitalgoods\Billing', 'register'));
 osc_add_hook('init', array('mindstellar\digitalgoods\Plugin', 'upgrade'));
 
-osc_add_hook('init_admin', array('mindstellar\digitalgoods\Plugin', 'handleAdminPost'));
 osc_add_hook('admin_menu_init', 'dg_admin_menu');
 
 osc_add_hook('item_form', 'dg_item_form');

@@ -8,11 +8,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-/**
- * This file only draws. The POST is handled on init_admin in Plugin::handleAdminPost(),
- * before the panel has printed anything, so the redirect after saving still works.
- */
-
 use mindstellar\digitalgoods\Access;
 use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Plugin;
@@ -23,149 +18,164 @@ if (!defined('ABS_PATH')) {
     exit('Direct access is not allowed.');
 }
 
-$dgRules = array(
-    Access::REGISTERED => __('Signed-in visitors', 'digital-goods'),
-    Access::ANYONE     => __('Anyone', 'digital-goods'),
-    Access::SELLER     => __('The seller only', 'digital-goods'),
+/*
+ * The settings page declaration. Core draws the form, checks CSRF and the admin's
+ * capability, and stores each field under the "digital_goods" preference section.
+ */
+
+$d = 'digital-goods';
+
+$clamp = static fn (int $min, int $max): Closure => static fn ($value): int => max($min, min($max, (int)$value));
+
+$notices = static function () use ($d): void {
+    if (!Storage::isPrivate()) {
+        echo '<div class="flashmessage flashmessage-warning"><p>' . osc_esc_html(__(
+            'Files are in a public bucket. For private files, turn on signed URLs under Settings → Storage.',
+            $d
+        )) . '</p></div>';
+    }
+    if (Plugin::categoryIds() === array()) {
+        echo '<div class="flashmessage flashmessage-warning"><p>' . osc_esc_html(__(
+            'Sellers cannot attach files yet. Choose at least one category.',
+            $d
+        )) . '</p></div>';
+    }
+};
+
+$tree = static function () use ($d): void {
+    osc_admin_tree_picker(array(
+        'id'         => 'dg_category_tree',
+        'intro'      => __('Categories that take files', $d),
+        'categories' => Category::getInstance()->toTreeAll(),
+        'selected'   => Plugin::categoryIds(),
+    ));
+    echo '<script>document.addEventListener("DOMContentLoaded", function () {'
+        . 'if (typeof oscTreeview === "function") {'
+        . 'oscTreeview(document.getElementById("dg_category_tree"), {collapsed: true});}});</script>';
+};
+
+$groups = array(
+    array(
+        'title'  => __('Categories', $d),
+        'fields' => array(
+            array('type' => 'custom', 'name' => 'notices', 'row' => false, 'render' => $notices),
+            array('type' => 'custom', 'name' => 'category_tree', 'row' => false, 'render' => $tree),
+            // Carries the ticked categories into the save. They live in core's plugin
+            // category table; the copy stored here lets the save report the change.
+            array(
+                'type'    => 'hidden',
+                'name'    => 'category_ids',
+                'default' => '',
+                'collect' => static function (): string {
+                    $ids = array_values(array_unique(array_filter(array_map('intval', Params::getParamArray('categories')))));
+                    sort($ids);
+
+                    return implode(',', $ids);
+                },
+                'persist' => static function ($value): string {
+                    $ids = $value === '' ? array() : array_map('intval', explode(',', (string)$value));
+                    $now = Plugin::categoryIds();
+                    sort($now);
+                    if ($ids !== $now) {
+                        Plugins::cleanCategoryFromPlugin(Plugin::SHORT_NAME);
+                        Plugins::addToCategoryPlugin($ids, Plugin::SHORT_NAME);
+                    }
+
+                    return (string)$value;
+                },
+            ),
+        ),
+    ),
+    array(
+        'title'  => __('Files', $d),
+        'fields' => array(
+            array(
+                'type'     => 'select',
+                'name'     => 'access',
+                'label'    => __('Who can download', $d),
+                'help'     => __('Sellers can always download their own files.', $d),
+                'options'  => array(
+                    Access::REGISTERED => __('Signed-in visitors', $d),
+                    Access::ANYONE     => __('Anyone', $d),
+                    Access::SELLER     => __('The seller only', $d),
+                ),
+                'default'  => Access::REGISTERED,
+                'sanitize' => static fn ($v) => in_array($v, Access::rules(), true) ? $v : Access::REGISTERED,
+            ),
+            array(
+                'type'     => 'number',
+                'name'     => 'max_files',
+                'label'    => __('Files per listing', $d),
+                'help'     => __('From 1 to 20.', $d),
+                'default'  => Plugin::DEFAULT_MAX_FILES,
+                'attrs'    => array('min' => 1, 'max' => 20),
+                'sanitize' => $clamp(1, 20),
+            ),
+            array(
+                'type'     => 'number',
+                'name'     => 'max_mb',
+                'label'    => __('Largest file (MB)', $d),
+                'help'     => sprintf(
+                    __('This server takes up to %s per file.', $d),
+                    Uploads::formatSize(Plugin::maxSizeBytes())
+                ),
+                'default'  => Plugin::DEFAULT_MAX_MB,
+                'attrs'    => array('min' => 1, 'max' => 2048),
+                'sanitize' => $clamp(1, 2048),
+            ),
+            array(
+                'type'     => 'text',
+                'name'     => 'allowed_ext',
+                'label'    => __('File types', $d),
+                'help'     => sprintf(
+                    __('Separate with commas. You can use: %s.', $d),
+                    implode(', ', array_keys(Uploads::typeMap()))
+                ),
+                'default'  => Plugin::DEFAULT_EXTENSIONS,
+                // Only types whose file contents the plugin can check.
+                'sanitize' => static function ($value): string {
+                    $extensions = array();
+                    foreach (explode(',', (string)$value) as $ext) {
+                        $ext = preg_replace('/[^a-z0-9]/', '', strtolower(trim($ext)));
+                        if ($ext !== '' && isset(Uploads::typeMap()[$ext])) {
+                            $extensions[$ext] = true;
+                        }
+                    }
+
+                    return $extensions === array()
+                        ? Plugin::DEFAULT_EXTENSIONS
+                        : implode(',', array_keys($extensions));
+                },
+            ),
+        ),
+    ),
 );
-$dgCurrent = Access::rule();
-$dgKnown   = array_keys(Uploads::typeMap());
-$dgCats    = Plugin::categoryIds();
-?>
-<h2 class="render-title"><?php echo osc_esc_html(__('Digital Goods', 'digital-goods')); ?></h2>
 
-<?php if (!Storage::isPrivate()) { ?>
-    <div class="flashmessage flashmessage-warning">
-        <p><?php echo osc_esc_html(__(
-            'Files are being stored in a public bucket, which hands any file to whoever has its address. The download link never shows that address, but for files that are genuinely private turn on signed URLs under Settings → Storage.',
-            'digital-goods'
-        )); ?></p>
-    </div>
-<?php } ?>
+if (Billing::available()) {
+    $groups[] = array(
+        'title'  => __('Charging', $d),
+        'fields' => array(
+            array(
+                'type'  => 'checkbox',
+                'name'  => 'require_purchase',
+                'label' => __('Charge sellers to attach files', $d),
+                'help'  => __('Sellers pay credits per listing. Files already attached stay.', $d),
+            ),
+            array(
+                'type'     => 'number',
+                'name'     => 'price_credits',
+                'label'    => __('Credits per listing', $d),
+                'default'  => 5,
+                'attrs'    => array('min' => 1),
+                'sanitize' => static fn ($v): int => max(1, (int)$v ?: 5),
+            ),
+        ),
+    );
+}
 
-<form action="<?php echo osc_esc_html(osc_admin_base_url(true)); ?>" method="post" class="form-horizontal">
-    <?php echo osc_csrf_token_form(); ?>
-    <input type="hidden" name="page" value="plugins"/>
-    <input type="hidden" name="action" value="renderplugin"/>
-    <input type="hidden" name="file" value="<?php echo osc_esc_html(osc_plugin_folder(DG_PLUGIN_FILE) . 'admin/settings.php'); ?>"/>
-    <input type="hidden" name="dg_action" value="save"/>
-
-    <?php if ($dgCats === array()) { ?>
-        <div class="flashmessage flashmessage-warning">
-            <p><?php echo osc_esc_html(__('Sellers cannot attach files yet. Choose at least one category below.', 'digital-goods')); ?></p>
-        </div>
-    <?php } ?>
-
-    <?php if (function_exists('osc_admin_tree_picker')) { ?>
-        <input type="hidden" name="dg_categories" value="1"/>
-        <?php osc_admin_tree_picker(array(
-            'id'         => 'dg_category_tree',
-            'intro'      => __('Categories where sellers can attach files', 'digital-goods'),
-            'categories' => (method_exists('Category', 'getInstance') ? Category::getInstance() : Category::newInstance())->toTreeAll(),
-            'selected'   => $dgCats,
-        )); ?>
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                if (typeof oscTreeview === 'function') {
-                    oscTreeview(document.getElementById('dg_category_tree'), {collapsed: true});
-                }
-            });
-        </script>
-    <?php } else { ?>
-        <div class="form-row">
-            <label class="form-label"><?php echo osc_esc_html(__('Categories', 'digital-goods')); ?></label>
-            <div class="form-controls">
-                <a href="<?php echo osc_esc_html(osc_plugin_configure_url(osc_plugin_folder(DG_PLUGIN_FILE) . 'index.php')); ?>">
-                    <?php echo osc_esc_html(__('Choose the categories where sellers can attach files', 'digital-goods')); ?>
-                </a>
-            </div>
-        </div>
-    <?php } ?>
-
-    <div class="form-row">
-        <label class="form-label" for="dg-access"><?php echo osc_esc_html(__('Who can download', 'digital-goods')); ?></label>
-        <div class="form-controls">
-            <select id="dg-access" name="access">
-                <?php foreach ($dgRules as $dgValue => $dgLabel) { ?>
-                    <option value="<?php echo osc_esc_html($dgValue); ?>"
-                        <?php echo $dgCurrent === $dgValue ? 'selected="selected"' : ''; ?>>
-                        <?php echo osc_esc_html($dgLabel); ?>
-                    </option>
-                <?php } ?>
-            </select>
-            <span class="help-block"><?php echo osc_esc_html(__(
-                'The seller always reaches their own files, whichever of these is chosen.',
-                'digital-goods'
-            )); ?></span>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <label class="form-label" for="dg-max-files"><?php echo osc_esc_html(__('Files per listing', 'digital-goods')); ?></label>
-        <div class="form-controls">
-            <input type="number" id="dg-max-files" name="max_files" min="1" max="20" class="input-small"
-                   value="<?php echo (int)Plugin::maxFiles(); ?>"/>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <label class="form-label" for="dg-max-mb"><?php echo osc_esc_html(__('Largest file (MB)', 'digital-goods')); ?></label>
-        <div class="form-controls">
-            <input type="number" id="dg-max-mb" name="max_mb" min="1" max="2048" class="input-small"
-                   value="<?php echo (int)osc_get_preference('max_mb', Plugin::PREF_SECTION) ?: Plugin::DEFAULT_MAX_MB; ?>"/>
-            <span class="help-block"><?php echo osc_esc_html(sprintf(
-                __('This server will not accept more than %s per file whatever is set here.', 'digital-goods'),
-                Uploads::formatSize(Plugin::maxSizeBytes())
-            )); ?></span>
-        </div>
-    </div>
-
-    <div class="form-row">
-        <label class="form-label" for="dg-ext"><?php echo osc_esc_html(__('Accepted file types', 'digital-goods')); ?></label>
-        <div class="form-controls">
-            <input type="text" id="dg-ext" name="allowed_ext" class="input-large"
-                   value="<?php echo osc_esc_html(implode(',', Uploads::allowedExtensions())); ?>"/>
-            <span class="help-block"><?php echo osc_esc_html(sprintf(
-                __('Comma separated. An upload has to match its extension when the file itself is examined, so only these are available: %s', 'digital-goods'),
-                implode(', ', $dgKnown)
-            )); ?></span>
-        </div>
-    </div>
-
-    <?php if (Billing::available()) { ?>
-        <div class="form-row">
-            <div class="form-controls">
-                <label for="dg-require-purchase">
-                    <input type="checkbox" id="dg-require-purchase" name="require_purchase" value="1"
-                        <?php echo Billing::required() ? 'checked="checked"' : ''; ?> />
-                    <?php echo osc_esc_html(__('Charge the seller for attaching files', 'digital-goods')); ?>
-                </label>
-                <span class="help-block"><?php echo osc_esc_html(__(
-                    'Attaching files becomes a per-listing upgrade the seller buys with credits, alongside bump and highlight. Listings that already carry files keep them.',
-                    'digital-goods'
-                )); ?></span>
-            </div>
-        </div>
-
-        <div class="form-row">
-            <label class="form-label" for="dg-price"><?php echo osc_esc_html(__('Credits per listing', 'digital-goods')); ?></label>
-            <div class="form-controls">
-                <input type="number" id="dg-price" name="price_credits" min="1" class="input-small"
-                       value="<?php echo (int)Billing::price(); ?>"/>
-            </div>
-        </div>
-    <?php } else { ?>
-        <div class="form-row">
-            <div class="form-controls">
-                <span class="help-block"><?php echo osc_esc_html(__(
-                    'Charging for attachments needs the billing subsystem, which arrived in Shopclass 6.2.0. Attaching files is free on this install.',
-                    'digital-goods'
-                )); ?></span>
-            </div>
-        </div>
-    <?php } ?>
-
-    <div class="form-actions">
-        <button type="submit" class="btn btn-submit"><?php echo osc_esc_html(__('Save', 'digital-goods')); ?></button>
-    </div>
-</form>
+return array(
+    'title'  => __('Digital Goods', $d),
+    // Listed in the plugin's own menu group, beside Downloads.
+    'menu'   => '',
+    'groups' => $groups,
+);

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.2.0
+
+### Changed
+
+- The settings page uses core's settings form, with the standard Save bar.
+- The Downloads page uses core's table, page title and empty state.
+- Menu entries read Settings and Downloads under the Digital Goods heading.
+- Shorter help text on every setting.
+- Needs Shopclass 6.4.0 or newer.
+
 ## 2.1.2
 
 ### Fixed

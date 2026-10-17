@@ -85,7 +85,7 @@ define('DG_XSENDFILE', true);
 
 ## Who can download
 
-One setting, under Plugins → Digital Goods settings:
+One setting, under Plugins → Digital Goods → Settings:
 
 - **Signed-in visitors** (default)
 - **Anyone**
@@ -93,7 +93,7 @@ One setting, under Plugins → Digital Goods settings:
 
 The seller always reaches their own files, whichever is chosen.
 
-**Plugins → Digital Goods downloads** lists every attached file, its listing, and how many
+**Plugins → Digital Goods → Downloads** lists every attached file, its listing, and how many
 times it was downloaded.
 
 ## What may be uploaded
@@ -114,21 +114,18 @@ made a paid per-listing upgrade: the seller spends credits on it the same way th
 bump or a highlight, and it appears alongside those wherever core lists what credits buy.
 
 It is **off by default**. Turning a plugin on should not start charging for something that
-was free a moment before. Switch it on under Plugins → Digital Goods settings and set the
+was free a moment before. Switch it on under Plugins → Digital Goods → Settings and set the
 price in credits. Listings that already carry files keep them.
 
 Only the seller pays, to attach files. There is no buyer-side purchase.
 
-On 6.1.0 there is no billing subsystem, so attaching files is free.
-
 ## Where it applies
 
-Only in the categories you pick, at the top of **Plugins → Digital Goods settings** (on ShopClass 6.1 and 6.2, follow
-the link there). Files appear on the post and edit forms and on the listing itself.
+Only in the categories you pick, at the top of **Plugins → Digital Goods → Settings**. Files appear on the post and edit forms and on the listing itself.
 
 ## Requirements
 
-ShopClass 6.1.0 or newer (tested up to 6.4), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
+ShopClass 6.4.0 or newer (tested up to 7.0), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
 and enabled by default) for checking what an upload actually is.
 
 ## History
