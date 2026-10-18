@@ -14,6 +14,8 @@
 
 declare(strict_types=1);
 
+use mindstellar\billing\event\ReceiptComposing;
+use mindstellar\billing\Order;
 use mindstellar\digitalgoods\Receipt;
 
 define('ABS_PATH', dirname(__DIR__) . '/');
@@ -92,6 +94,14 @@ class FakeOrder
 $base = array('lines' => array(), 'extra' => array(array('label' => 'VAT', 'value' => '123')), 'footer' => '');
 
 harness_section('the receipt filter');
+
+$paid   = new Order(1, 7, 'fake', null, 0, 'INR', 0, Order::STATUS_PAID, array(), '', '2026-01-01 00:00:00');
+$typed  = new ReceiptComposing($paid, array('title' => 'Receipt'));
+Receipt::onDetails($typed);
+pin('typed: a paid order adds a row per file', array('Download: guide.pdf', 'Download: bonus.zip'), array_column($typed->extraRows(), 'label'));
+$typed = new ReceiptComposing(new Order(1, 7, 'fake', null, 0, 'INR', 0, Order::STATUS_PENDING, array(), ''), array('title' => 'Receipt'));
+Receipt::onDetails($typed);
+pin('typed: an order that is not paid adds none', array(), $typed->extraRows());
 
 $out = Receipt::details($base, new FakeOrder(1, 7, true));
 pin('a paid order lists a link per file, after the rows already there', array('VAT', 'Download: guide.pdf', 'Download: bonus.zip'), array_column($out['extra'], 'label'));

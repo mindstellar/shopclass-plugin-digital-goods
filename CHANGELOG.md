@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.2
+
+### Changed
+
+- Uses core's typed cart and receipt events when core has them; older cores keep the filters.
+
 ## 2.3.1
 
 ### New

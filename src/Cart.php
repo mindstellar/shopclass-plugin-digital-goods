@@ -10,13 +10,23 @@
 
 namespace mindstellar\digitalgoods;
 
+use mindstellar\billing\event\CartShipping;
+
 /**
  * Tells core's checkout when a cart holds downloads only, so it asks for no address or delivery.
  */
 class Cart
 {
+    /** Typed listener for `cart_needs_shipping` on cores with the cart events. */
+    public static function onShipping(CartShipping $event): void
+    {
+        if ($event->needsShipping() && self::downloadsOnly($event->cartArray())) {
+            $event->setNeedsShipping(false);
+        }
+    }
+
     /**
-     * Core's `cart_needs_shipping` filter. Under the buyer rule, a cart whose every listing has
+     * Core's `cart_needs_shipping` filter, for cores without the cart events. Under the buyer rule, a cart whose every listing has
      * files is downloads only. One query.
      *
      * @param mixed $needs
@@ -26,8 +36,20 @@ class Cart
      */
     public static function needsShipping($needs, $cart = array())
     {
-        if ($needs === false || !is_array($cart) || Access::rule() !== Access::BUYER || !Access::buyerRuleWorks()) {
+        if ($needs === false || !is_array($cart)) {
             return $needs;
+        }
+
+        return self::downloadsOnly($cart) ? false : $needs;
+    }
+
+    /**
+     * @param array<string,mixed> $cart
+     */
+    private static function downloadsOnly(array $cart): bool
+    {
+        if (Access::rule() !== Access::BUYER || !Access::buyerRuleWorks()) {
+            return false;
         }
         $ids = array();
         foreach ((array)($cart['lines'] ?? array()) as $line) {
@@ -35,15 +57,15 @@ class Cart
         }
         $ids = array_values(array_unique($ids));
         if ($ids === array() || in_array(0, $ids, true)) {
-            return $needs;
+            return false;
         }
         $files = Files::forItems($ids);
         foreach ($ids as $id) {
             if (empty($files[$id])) {
-                return $needs;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 }

@@ -3,7 +3,7 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.3.1
+Version: 2.3.2
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
@@ -279,10 +279,11 @@ osc_add_route(
 Api::register();
 
 // A cart of downloads only needs no address or delivery at checkout.
-osc_add_filter('cart_needs_shipping', array(Cart::class, 'needsShipping'));
+// Cores with the typed cart and receipt events get the typed listeners; older ones the filters.
+osc_add_filter('cart_needs_shipping', array(Cart::class, class_exists('mindstellar\\billing\\event\\CartShipping') ? 'onShipping' : 'needsShipping'));
 
 // A paid order's receipt lists the download links.
-osc_add_filter('billing_receipt_details', array(Receipt::class, 'details'));
+osc_add_filter('billing_receipt_details', array(Receipt::class, class_exists('mindstellar\\billing\\event\\ReceiptComposing') ? 'onDetails' : 'details'));
 
 // Registered on init so the feature exists before anything reads the catalogue of what
 // credits buy. A no-op where billing is not present.
