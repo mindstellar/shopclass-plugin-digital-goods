@@ -68,6 +68,17 @@ if (!$oldCore) {
     }
 }
 
+function osc_db_select_one($sql, $params = array())
+{
+    foreach ($GLOBALS['dg']['rows'] as $row) {
+        if (str_contains($sql, 's_token = ?') && ($row['s_token'] ?? '') === ($params[0] ?? null)) {
+            return $row;
+        }
+    }
+
+    return null;
+}
+
 function osc_is_this_category($name, $id)
 {
     return in_array((int)$id, $GLOBALS['dg']['categories'], true);
@@ -199,6 +210,36 @@ $GLOBALS['dg']['paid'] = array();
 check('a pending order is not a purchase (core counts settled orders only)', !$as(7, Access::BUYER));
 $GLOBALS['dg']['user'] = 7;
 pin('the refusal says why', 'The attached files are for buyers. They unlock once your order is paid.', Access::deniedMessage());
+
+harness_section('the download route');
+
+$GLOBALS['dg']['rule'] = Access::BUYER;
+$GLOBALS['dg']['rows'] = array(
+    array('pk_i_id' => 1, 'fk_i_item_id' => 10, 's_name' => 'Guide.pdf', 's_token' => str_repeat('a', 32)),
+    array('pk_i_id' => 2, 'fk_i_item_id' => 11, 's_name' => 'Other.pdf', 's_token' => str_repeat('d', 32)),
+);
+$route = static function (int $userId, string $key): array {
+    $GLOBALS['dg']['user'] = $userId;
+    list($status, $row) = Access::forKey($key);
+
+    return array($status, $row === null ? null : $row['pk_i_id']);
+};
+$GLOBALS['dg']['paid'] = array(array(7, 10));
+pin('an unknown key is a 404', array(404, null), $route(7, str_repeat('f', 32)));
+pin('so is a malformed one', array(404, null), $route(7, '../../config.php'));
+pin('a stranger is refused', array(403, 1), $route(8, str_repeat('a', 32)));
+pin('the buyer gets the file the key names', array(200, 1), $route(7, str_repeat('a', 32)));
+pin('but not a file of a listing they did not buy', array(403, 2), $route(7, str_repeat('d', 32)));
+$GLOBALS['dg']['paid'] = array();
+pin('a buyer whose order is pending is refused', array(403, 1), $route(7, str_repeat('a', 32)));
+check('the route asks forKey() and serves only a 200', (static function (): bool {
+    $src = (string)file_get_contents(ABS_PATH . 'public/download.php');
+    $gate = strpos($src, 'Access::forKey(');
+    $serve = strpos($src, 'Delivery::sendFile(');
+
+    return $gate !== false && $serve !== false && $gate < $serve && str_contains($src, 'if ($dgStatus !== 200) {') && substr_count($src, 'Files::byToken') === 0;
+})());
+$GLOBALS['dg']['rows'] = array();
 
 harness_section('the listing API field');
 

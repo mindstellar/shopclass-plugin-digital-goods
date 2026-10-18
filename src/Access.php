@@ -65,6 +65,27 @@ class Access
     }
 
     /**
+     * What the download route answers for a key: 404 when no file has it, 403 when the
+     * visitor may not have the listing's files, 200 with the file's row otherwise.
+     *
+     * @param string $key
+     *
+     * @return array{0:int,1:array<string,mixed>|null}
+     */
+    public static function forKey($key)
+    {
+        $row = Files::byToken((string)$key);
+        if (!is_array($row) || $row === array()) {
+            return array(404, null);
+        }
+        if (!self::allows((int)$row['fk_i_item_id'])) {
+            return array(403, $row);
+        }
+
+        return array(200, $row);
+    }
+
+    /**
      * Whether the current visitor may download a file attached to this listing.
      *
      * @param int $itemId
