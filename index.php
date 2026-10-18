@@ -28,6 +28,7 @@ Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issue
 use mindstellar\digitalgoods\Access;
 use mindstellar\digitalgoods\Api;
 use mindstellar\digitalgoods\Billing;
+use mindstellar\digitalgoods\Cart;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Plugin;
 use mindstellar\digitalgoods\Storage;
@@ -275,6 +276,9 @@ osc_add_route(
 
 // On a core with the API, listings carry ext.digital-goods.downloads for the caller.
 Api::register();
+
+// A cart of downloads only needs no address or delivery at checkout.
+osc_add_filter('cart_needs_shipping', array(Cart::class, 'needsShipping'));
 
 // Registered on init so the feature exists before anything reads the catalogue of what
 // credits buy. A no-op where billing is not present.

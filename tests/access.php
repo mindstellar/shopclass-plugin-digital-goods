@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 use mindstellar\digitalgoods\Access;
 use mindstellar\digitalgoods\Api;
+use mindstellar\digitalgoods\Cart;
 
 define('ABS_PATH', dirname(__DIR__) . '/');
 define('DB_TABLE_PREFIX', 'oc_');
@@ -25,6 +26,7 @@ require_once ABS_PATH . 'src/Plugin.php';
 require_once ABS_PATH . 'src/Files.php';
 require_once ABS_PATH . 'src/Access.php';
 require_once ABS_PATH . 'src/Api.php';
+require_once ABS_PATH . 'src/Cart.php';
 require_once __DIR__ . '/lib/harness.php';
 
 $oldCore = getenv('DG_TEST_OLD_CORE') !== false;
@@ -240,6 +242,22 @@ check('the route asks forKey() and serves only a 200', (static function (): bool
     return $gate !== false && $serve !== false && $gate < $serve && str_contains($src, 'if ($dgStatus !== 200) {') && substr_count($src, 'Files::byToken') === 0;
 })());
 $GLOBALS['dg']['rows'] = array();
+
+harness_section('a cart of downloads');
+
+$GLOBALS['dg']['rows'] = array(
+    array('fk_i_item_id' => 10, 's_name' => 'Guide.pdf', 's_token' => str_repeat('a', 32)),
+    array('fk_i_item_id' => 11, 's_name' => 'Other.pdf', 's_token' => str_repeat('d', 32)),
+);
+$cart = static fn (array $ids): array => array('lines' => array_map(static fn (int $id): array => array('item_id' => $id, 'qty' => 1), $ids));
+$GLOBALS['dg']['rule'] = Access::BUYER;
+pin('every listing has files: no shipping', false, Cart::needsShipping(true, $cart(array(10, 11))));
+pin('one listing without files still ships', true, Cart::needsShipping(true, $cart(array(10, 12))));
+pin('an empty cart is left alone', true, Cart::needsShipping(true, $cart(array())));
+$GLOBALS['dg']['rule'] = Access::REGISTERED;
+pin('outside the buyer rule, files are extras and the cart ships', true, Cart::needsShipping(true, $cart(array(10))));
+$GLOBALS['dg']['rows'] = array();
+$GLOBALS['dg']['queries'] = array();
 
 harness_section('the listing API field');
 
