@@ -129,6 +129,25 @@ Only the seller pays, to attach files. Buyers pay for the listing itself through
 
 Only in the categories you pick, at the top of **Plugins → Digital Goods → Settings**. Files appear on the post and edit forms and on the listing itself.
 
+## Settings
+
+**Plugins → Digital Goods → Settings** sets the categories that take files, who may download, the
+allowed file types, the file count and size limits, the storage and the price in credits. Each is
+explained in the sections above and below.
+
+## What it stores
+
+Files go to the storage you pick (see *How files are kept*). One table, `t_item_dg_file`, holds a
+row per file: the listing, the random key, the download token, the name, size, type and download
+count. The settings are preferences in the `digital_goods` section. Uninstalling drops the table.
+
+## Hooks
+
+Listens to the actions `init`, `item_form`, `item_edit`, `item_detail`, `posted_item`,
+`edited_item`, `delete_item`, `admin_menu_init` and `api_listings_prefetch`, and to the filters
+`api_listing` (adds the file list to a listing), `cart_needs_shipping` (a cart of downloads asks for
+no address) and `billing_receipt_details` (adds the download links to the paid receipt).
+
 ## Requirements
 
 ShopClass 6.4.0 or newer (tested up to 7.0), PHP 8.0 or newer, and the `fileinfo` extension (bundled with PHP
