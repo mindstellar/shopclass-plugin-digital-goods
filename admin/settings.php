@@ -54,6 +54,16 @@ $tree = static function () use ($d): void {
         . 'oscTreeview(document.getElementById("dg_category_tree"), {collapsed: true});}});</script>';
 };
 
+$who = array(
+    Access::REGISTERED => __('Signed-in visitors', $d),
+    Access::ANYONE     => __('Anyone', $d),
+);
+// The buyer rule needs a core that records order lines.
+if (Access::buyerRuleWorks()) {
+    $who[Access::BUYER] = __('Anyone who bought it, and the seller', $d);
+}
+$who[Access::SELLER] = __('The seller only', $d);
+
 $groups = array(
     array(
         'title'  => __('Categories', $d),
@@ -94,11 +104,7 @@ $groups = array(
                 'name'     => 'access',
                 'label'    => __('Who can download', $d),
                 'help'     => __('Sellers can always download their own files.', $d),
-                'options'  => array(
-                    Access::REGISTERED => __('Signed-in visitors', $d),
-                    Access::ANYONE     => __('Anyone', $d),
-                    Access::SELLER     => __('The seller only', $d),
-                ),
+                'options'  => $who,
                 'default'  => Access::REGISTERED,
                 'sanitize' => static fn ($v) => in_array($v, Access::rules(), true) ? $v : Access::REGISTERED,
             ),

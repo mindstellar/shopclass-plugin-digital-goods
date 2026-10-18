@@ -27,6 +27,7 @@ class Access
 {
     public const ANYONE = 'anyone';
     public const REGISTERED = 'registered';
+    public const BUYER = 'buyer';
     public const SELLER = 'seller';
 
     /**
@@ -34,7 +35,7 @@ class Access
      */
     public static function rules()
     {
-        return array(self::ANYONE, self::REGISTERED, self::SELLER);
+        return array(self::ANYONE, self::REGISTERED, self::BUYER, self::SELLER);
     }
 
     /**
@@ -54,6 +55,16 @@ class Access
     }
 
     /**
+     * Whether core records who bought what, which the buyer rule needs.
+     *
+     * @return bool
+     */
+    public static function buyerRuleWorks()
+    {
+        return function_exists('osc_order_bought');
+    }
+
+    /**
      * Whether the current visitor may download a file attached to this listing.
      *
      * @param int $itemId
@@ -67,19 +78,52 @@ class Access
             return false;
         }
 
-        if (self::isSeller($itemId)) {
+        $userId = osc_is_web_user_logged_in() ? (int)osc_logged_user_id() : 0;
+
+        return self::decide(self::rule(), $itemId, $userId, self::ownerOf($itemId));
+    }
+
+    /**
+     * Whether a user may download a listing's files under a rule. The seller always may.
+     *
+     * @param string   $rule
+     * @param int      $itemId
+     * @param int      $userId  0 for a visitor who is not signed in
+     * @param int|null $ownerId the listing's author, null when it has none
+     *
+     * @return bool
+     */
+    public static function decide(string $rule, int $itemId, int $userId, ?int $ownerId): bool
+    {
+        if ($userId > 0 && $ownerId === $userId) {
             return true;
         }
 
-        switch (self::rule()) {
+        switch ($rule) {
             case self::ANYONE:
                 return true;
             case self::REGISTERED:
-                return osc_is_web_user_logged_in();
+                return $userId > 0;
+            case self::BUYER:
+                return $userId > 0 && self::bought($userId, $itemId);
             case self::SELLER:
             default:
                 return false;
         }
+    }
+
+    /**
+     * Whether the user has a paid order for the listing. On a core without order lines the
+     * buyer rule falls back to signed-in visitors.
+     *
+     * @param int $userId
+     * @param int $itemId
+     *
+     * @return bool
+     */
+    public static function bought(int $userId, int $itemId): bool
+    {
+        return !self::buyerRuleWorks() || osc_order_bought($userId, $itemId);
     }
 
     /**
@@ -95,12 +139,24 @@ class Access
             return false;
         }
 
-        $item = Item::newInstance()->findByPrimaryKey((int)$itemId);
+        return self::ownerOf((int)$itemId) === (int)osc_logged_user_id();
+    }
+
+    /**
+     * The listing's author, or null when the listing has none or is gone.
+     *
+     * @param int $itemId
+     *
+     * @return int|null
+     */
+    private static function ownerOf(int $itemId): ?int
+    {
+        $item = Item::newInstance()->findByPrimaryKey($itemId);
         if (!is_array($item) || !isset($item['fk_i_user_id'])) {
-            return false;
+            return null;
         }
 
-        return (int)$item['fk_i_user_id'] === (int)osc_logged_user_id();
+        return (int)$item['fk_i_user_id'];
     }
 
     /**
@@ -111,7 +167,11 @@ class Access
      */
     public static function deniedMessage()
     {
-        if (self::rule() === self::REGISTERED) {
+        $rule = self::rule();
+        if ($rule === self::BUYER && self::buyerRuleWorks()) {
+            return __('The attached files are for buyers. They unlock once your order is paid.', 'digital-goods');
+        }
+        if ($rule === self::REGISTERED || $rule === self::BUYER) {
             return __('Sign in to download the attached files.', 'digital-goods');
         }
 

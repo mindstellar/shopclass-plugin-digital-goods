@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.0
+
+### New
+
+- A "who can download" choice for buyers: anyone with a paid order for the listing, and the seller.
+- Listings in the API carry `ext.digital-goods.downloads` with the links the caller may use.
+
 ## 2.2.0
 
 ### Changed

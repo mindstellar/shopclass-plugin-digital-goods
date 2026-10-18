@@ -89,9 +89,15 @@ One setting, under Plugins → Digital Goods → Settings:
 
 - **Signed-in visitors** (default)
 - **Anyone**
+- **Anyone who bought it, and the seller**: a paid order for the listing (Shopclass 7.0 shop
+  mode). A pending, cancelled or refunded order does not count.
 - **The seller only**
 
 The seller always reaches their own files, whichever is chosen.
+
+On Shopclass 7.0, listings in the API carry `ext.digital-goods.downloads`: `[{name, url}]`
+for a caller the rule lets in, and an empty list for anyone else. The links are the same
+gated download links the listing page shows.
 
 **Plugins → Digital Goods → Downloads** lists every attached file, its listing, and how many
 times it was downloaded.
@@ -117,7 +123,7 @@ It is **off by default**. Turning a plugin on should not start charging for some
 was free a moment before. Switch it on under Plugins → Digital Goods → Settings and set the
 price in credits. Listings that already carry files keep them.
 
-Only the seller pays, to attach files. There is no buyer-side purchase.
+Only the seller pays, to attach files. Buyers pay for the listing itself through the shop.
 
 ## Where it applies
 

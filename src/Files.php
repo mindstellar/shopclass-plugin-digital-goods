@@ -96,6 +96,38 @@ class Files
     }
 
     /**
+     * The files of several listings in one query, each row with its listing's author and
+     * category, keyed by listing id. A listing with no files is absent.
+     *
+     * @param int[] $itemIds
+     *
+     * @return array<int,array<int,array<string,mixed>>>
+     */
+    public static function forItems(array $itemIds)
+    {
+        $itemIds = array_values(array_unique(array_filter(array_map('intval', $itemIds))));
+        if ($itemIds === array()) {
+            return array();
+        }
+
+        $rows = osc_db_select(
+            'SELECT f.fk_i_item_id, f.s_name, f.s_token, i.fk_i_user_id, i.fk_i_category_id'
+            . ' FROM ' . self::table() . ' f'
+            . ' JOIN ' . DB_TABLE_PREFIX . 't_item i ON i.pk_i_id = f.fk_i_item_id'
+            . ' WHERE f.fk_i_item_id IN (' . implode(',', array_fill(0, count($itemIds), '?')) . ')'
+            . ' ORDER BY f.pk_i_id',
+            $itemIds
+        );
+
+        $byItem = array();
+        foreach ((array)$rows as $row) {
+            $byItem[(int)$row['fk_i_item_id']][] = $row;
+        }
+
+        return $byItem;
+    }
+
+    /**
      * One file by the token in its download URL — the only lookup that route performs.
      *
      * @param string $token

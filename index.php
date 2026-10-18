@@ -3,7 +3,7 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.2.0
+Version: 2.3.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
@@ -26,6 +26,7 @@ Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issue
  */
 
 use mindstellar\digitalgoods\Access;
+use mindstellar\digitalgoods\Api;
 use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Plugin;
@@ -271,6 +272,9 @@ osc_add_route(
     'digital-goods/download/{key}',
     osc_plugin_folder(__FILE__) . 'public/download.php'
 );
+
+// On a core with the API, listings carry ext.digital-goods.downloads for the caller.
+Api::register();
 
 // Registered on init so the feature exists before anything reads the catalogue of what
 // credits buy. A no-op where billing is not present.
