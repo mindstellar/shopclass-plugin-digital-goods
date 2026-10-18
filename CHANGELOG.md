@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.3.1
+
+### New
+
+- A paid order's receipt lists the download links.
+- Under the buyer rule, a cart of downloads only asks for no address or delivery.
+
 ## 2.3.0
 
 ### New
