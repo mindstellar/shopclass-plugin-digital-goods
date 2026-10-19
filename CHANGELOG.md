@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.4.0
+
+### New
+
+- A Downloads page in the buyer's account lists the files from paid orders, newest first, with a Downloads entry in the account menu.
+
 ## 2.3.2
 
 ### Changed

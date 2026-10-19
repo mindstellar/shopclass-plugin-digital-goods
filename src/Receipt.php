@@ -59,6 +59,23 @@ class Receipt
      */
     private static function rows($order): array
     {
+        $rows = array();
+        foreach (self::downloads($order) as $download) {
+            $rows[] = array('label' => sprintf(__('Download: %s', 'digital-goods'), $download['name']), 'value' => $download['url']);
+        }
+
+        return $rows;
+    }
+
+    /**
+     * The files of a paid order the buyer may download; none for any other order.
+     *
+     * @param object $order
+     *
+     * @return array<int,array{name:string,url:string}>
+     */
+    public static function downloads($order): array
+    {
         if (!$order->isPaid() || !class_exists('mindstellar\\billing\\OrderLineStore')) {
             return array();
         }
@@ -66,13 +83,13 @@ class Receipt
         foreach (\mindstellar\billing\OrderLineStore::itemLines($order->getId()) as $line) {
             $ids[] = (int)($line['item_id'] ?? 0);
         }
-        $rows = array();
+        $out = array();
         foreach (Files::forItems($ids) as $files) {
             foreach (Api::downloads($files, $order->getUserId()) as $download) {
-                $rows[] = array('label' => sprintf(__('Download: %s', 'digital-goods'), $download['name']), 'value' => $download['url']);
+                $out[] = $download;
             }
         }
 
-        return $rows;
+        return $out;
     }
 }
