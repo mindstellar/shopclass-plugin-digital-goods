@@ -29,6 +29,7 @@ use mindstellar\digitalgoods\Access;
 use mindstellar\digitalgoods\Api;
 use mindstellar\digitalgoods\Billing;
 use mindstellar\digitalgoods\Cart;
+use mindstellar\digitalgoods\Downloads;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Plugin;
 use mindstellar\digitalgoods\Receipt;
@@ -286,18 +287,7 @@ osc_add_route(
     'custom',
     'Downloads'
 );
-osc_add_filter('user_menu_filter', static function ($options) {
-    $options = is_array($options) ? $options : array();
-    if (osc_is_web_user_logged_in()) {
-        $options[] = array(
-            'name'  => __('Downloads', 'digital-goods'),
-            'url'   => osc_route_url('digital-goods-downloads'),
-            'class' => 'opt_downloads',
-        );
-    }
-
-    return $options;
-});
+osc_add_filter('user_menu_filter', array(Downloads::class, 'menu'));
 
 // On a core with the API, listings carry ext.digital-goods.downloads for the caller.
 Api::register();

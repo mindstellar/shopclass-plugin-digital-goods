@@ -4,7 +4,7 @@
 
 ### New
 
-- A Downloads page in the buyer's account lists the files from paid orders, newest first, with a Downloads entry in the account menu.
+- A Downloads page in the buyer's account lists the files from paid orders, newest first, with a Downloads entry in the account menu once the buyer has one.
 
 ## 2.3.2
 
