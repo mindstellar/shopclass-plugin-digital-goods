@@ -237,26 +237,20 @@ function dg_item_detail()
 }
 
 /**
- * Admin menu entries, under the plugin's own heading.
+ * The Downloads list: Billing > Downloads, or Settings > Shop while billing is switched off.
  *
  * @return void
  */
 function dg_admin_menu()
 {
-    osc_add_admin_submenu_divider('plugins', __('Digital Goods', 'digital-goods'), 'dg_divider', 'administrator');
+    $billing = function_exists('osc_billing_enabled') && osc_billing_enabled();
     osc_add_admin_submenu_page(
-        'plugins',
-        __('Settings', 'digital-goods'),
-        osc_settings_page_url(Plugin::PREF_SECTION),
-        'settings-page-' . Plugin::PREF_SECTION,
-        'administrator'
-    );
-    osc_add_admin_submenu_page(
-        'plugins',
+        $billing ? 'billing' : 'settings',
         __('Downloads', 'digital-goods'),
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',
-        'administrator'
+        'administrator',
+        $billing ? null : 'settings_group_shop'
     );
 }
 

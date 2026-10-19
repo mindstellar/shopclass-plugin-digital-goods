@@ -181,7 +181,7 @@ if (Billing::available()) {
 
 return array(
     'title'  => __('Digital Goods', $d),
-    // Listed in the plugin's own menu group, beside Downloads.
-    'menu'   => '',
+    'menu'   => 'settings',
+    'group'  => 'shop',
     'groups' => $groups,
 );

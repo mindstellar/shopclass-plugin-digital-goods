@@ -85,7 +85,7 @@ define('DG_XSENDFILE', true);
 
 ## Who can download
 
-One setting, under Plugins → Digital Goods → Settings:
+One setting, under Settings → Shop → Digital Goods:
 
 - **Signed-in visitors** (default)
 - **Anyone**
@@ -99,7 +99,7 @@ On Shopclass 7.0, listings in the API carry `ext.digital-goods.downloads`: `[{na
 for a caller the rule lets in, and an empty list for anyone else. The links are the same
 gated download links the listing page shows.
 
-**Plugins → Digital Goods → Downloads** lists every attached file, its listing, and how many
+**Billing → Downloads** lists every attached file, its listing, and how many
 times it was downloaded.
 
 ## What may be uploaded
@@ -120,18 +120,18 @@ made a paid per-listing upgrade: the seller spends credits on it the same way th
 bump or a highlight, and it appears alongside those wherever core lists what credits buy.
 
 It is **off by default**. Turning a plugin on should not start charging for something that
-was free a moment before. Switch it on under Plugins → Digital Goods → Settings and set the
+was free a moment before. Switch it on under Settings → Shop → Digital Goods and set the
 price in credits. Listings that already carry files keep them.
 
 Only the seller pays, to attach files. Buyers pay for the listing itself through the shop.
 
 ## Where it applies
 
-Only in the categories you pick, at the top of **Plugins → Digital Goods → Settings**. Files appear on the post and edit forms and on the listing itself.
+Only in the categories you pick, at the top of **Settings → Shop → Digital Goods**. Files appear on the post and edit forms and on the listing itself.
 
 ## Settings
 
-**Plugins → Digital Goods → Settings** sets the categories that take files, who may download, the
+**Settings → Shop → Digital Goods** sets the categories that take files, who may download, the
 allowed file types, the file count and size limits, the storage and the price in credits. Each is
 explained in the sections above and below.
 
