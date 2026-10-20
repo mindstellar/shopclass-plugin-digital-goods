@@ -251,7 +251,7 @@ function dg_admin_menu()
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',
         'administrator',
-        $billing ? null : 'settings_group_' . Plugin::settingsGroup()
+        $billing ? null : Plugin::settingsGroup()
     );
 }
 
