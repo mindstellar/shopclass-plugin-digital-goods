@@ -238,7 +238,7 @@ function dg_item_detail()
 }
 
 /**
- * The Downloads list: Billing > Downloads, or Settings (Shop on a shop site, else Content) while billing is switched off.
+ * The Downloads list: Billing > Downloads, or Settings > Selling while billing is switched off.
  *
  * @return void
  */

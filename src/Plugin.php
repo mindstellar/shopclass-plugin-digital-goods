@@ -19,10 +19,10 @@ namespace mindstellar\digitalgoods;
 class Plugin
 {
     public const PREF_SECTION = 'digital_goods';
-    /** The Settings group the screens sit in: Shop on a shop site, Content on a classifieds one. */
+    /** The Settings group the screens sit in. */
     public static function settingsGroup(): string
     {
-        return function_exists('osc_site_mode') && osc_site_mode() === 'shop' ? 'shop' : 'content';
+        return 'selling';
     }
 
     public const DEFAULT_EXTENSIONS = 'zip,7z,gz,pdf,epub';
