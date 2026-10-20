@@ -238,20 +238,18 @@ function dg_item_detail()
 }
 
 /**
- * The Downloads list: Billing > Downloads, or Settings > Selling while billing is switched off.
+ * The Downloads list, under Billing (under Settings while billing is switched off).
  *
  * @return void
  */
 function dg_admin_menu()
 {
-    $billing = function_exists('osc_billing_enabled') && osc_billing_enabled();
     osc_add_admin_submenu_page(
-        $billing ? 'billing' : 'settings',
+        'billing',
         __('Downloads', 'digital-goods'),
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',
-        'administrator',
-        $billing ? null : Plugin::settingsGroup()
+        'administrator'
     );
 }
 

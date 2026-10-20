@@ -85,7 +85,7 @@ define('DG_XSENDFILE', true);
 
 ## Who can download
 
-One setting, under Settings → Selling → Digital Goods:
+One setting, under Billing → Digital Goods:
 
 - **Signed-in visitors** (default)
 - **Anyone**
@@ -120,18 +120,18 @@ made a paid per-listing upgrade: the seller spends credits on it the same way th
 bump or a highlight, and it appears alongside those wherever core lists what credits buy.
 
 It is **off by default**. Turning a plugin on should not start charging for something that
-was free a moment before. Switch it on under Settings → Selling → Digital Goods and set the
+was free a moment before. Switch it on under Billing → Digital Goods and set the
 price in credits. Listings that already carry files keep them.
 
 Only the seller pays, to attach files. Buyers pay for the listing itself through the shop.
 
 ## Where it applies
 
-Only in the categories you pick, at the top of **Settings → Selling → Digital Goods**. Files appear on the post and edit forms and on the listing itself.
+Only in the categories you pick, at the top of **Billing → Digital Goods**. Files appear on the post and edit forms and on the listing itself.
 
 ## Settings
 
-**Settings → Selling → Digital Goods** sets the categories that take files, who may download, the
+**Billing → Digital Goods** sets the categories that take files, who may download, the
 allowed file types, the file count and size limits, the storage and the price in credits. Each is
 explained in the sections above and below.
 
