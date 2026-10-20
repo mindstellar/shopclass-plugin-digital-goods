@@ -182,6 +182,6 @@ if (Billing::available()) {
 return array(
     'title'  => __('Digital Goods', $d),
     'menu'   => 'settings',
-    'group'  => 'shop',
+    'group'  => Plugin::settingsGroup(),
     'groups' => $groups,
 );
