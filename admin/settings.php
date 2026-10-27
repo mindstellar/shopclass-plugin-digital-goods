@@ -36,7 +36,7 @@ $notices = static function () use ($d): void {
     }
     if (Plugin::categoryIds() === array()) {
         echo '<div class="flashmessage flashmessage-warning"><p>' . osc_esc_html(__(
-            'Sellers cannot attach files yet. Choose at least one category.',
+            'No category has a file box yet. Tick at least one.',
             $d
         )) . '</p></div>';
     }
