@@ -254,14 +254,17 @@ $GLOBALS['dg']['rule'] = Access::BUYER;
 pin('every listing has files: no shipping', false, Cart::needsShipping(true, $cart(array(10, 11))));
 pin('one listing without files still ships', true, Cart::needsShipping(true, $cart(array(10, 12))));
 pin('an empty cart is left alone', true, Cart::needsShipping(true, $cart(array())));
-$typed = static function (array $ids) use ($cart): bool {
-    $event = new \mindstellar\billing\event\CartShipping($cart($ids));
-    Cart::onShipping($event);
+// The typed event exists from Shopclass 7.1; on 7.0 only the filter above runs.
+if (class_exists(\mindstellar\billing\event\CartShipping::class)) {
+    $typed = static function (array $ids) use ($cart): bool {
+        $event = new \mindstellar\billing\event\CartShipping($cart($ids));
+        Cart::onShipping($event);
 
-    return $event->needsShipping();
-};
-pin('typed: every listing has files, no shipping', false, $typed(array(10, 11)));
-pin('typed: one listing without files still ships', true, $typed(array(10, 12)));
+        return $event->needsShipping();
+    };
+    pin('typed: every listing has files, no shipping', false, $typed(array(10, 11)));
+    pin('typed: one listing without files still ships', true, $typed(array(10, 12)));
+}
 $GLOBALS['dg']['rule'] = Access::REGISTERED;
 pin('outside the buyer rule, files are extras and the cart ships', true, Cart::needsShipping(true, $cart(array(10))));
 $GLOBALS['dg']['rows'] = array();
