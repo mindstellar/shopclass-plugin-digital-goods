@@ -33,7 +33,7 @@ $dgItemId  = function_exists('osc_item_id') ? (int)osc_item_id() : 0;
 $dgMayAdd  = $dgItemId <= 0 || Billing::itemMayAttach($dgItemId);
 $dgBuyUrl  = $dgItemId > 0 ? Billing::checkoutUrl($dgItemId) : '';
 ?>
-<div class="dg-upload">
+<div class="dg-upload" data-osc-no-shipping>
 <?php if (!$dgMayAdd) { ?>
     <p class="dg-upload__locked">
         <?php echo osc_esc_html(__('Attaching downloadable files to this listing has not been paid for.', 'digital-goods')); ?>
@@ -42,14 +42,14 @@ $dgBuyUrl  = $dgItemId > 0 ? Billing::checkoutUrl($dgItemId) : '';
         <?php } ?>
     </p>
 <?php } else { ?>
-    <label class="dg-upload__label" for="dg_files">
+    <label class="dg-upload__label form-label" for="dg_files">
         <?php echo osc_esc_html(__('Downloadable files', 'digital-goods')); ?>
     </label>
 
-    <input type="file" id="dg_files" name="dg_files[]" multiple
+    <input type="file" id="dg_files" class="form-control" name="dg_files[]" multiple
            accept="<?php echo osc_esc_html($dgAccept); ?>"/>
 
-    <p class="dg-upload__hint">
+    <p class="dg-upload__hint form-text">
         <?php echo osc_esc_html(sprintf(
             __('Up to %1$d file(s), %2$s each. Accepted: %3$s', 'digital-goods'),
             Plugin::maxFiles(),

@@ -32,10 +32,9 @@ if (!defined('ABS_PATH')) {
     exit('Direct access is not allowed.');
 }
 
-$dgToken = Params::getParamString('key');
-$dgRow   = Files::byToken($dgToken);
+list($dgStatus, $dgRow) = Access::forKey(Params::getParamString('key'));
 
-if (!is_array($dgRow) || $dgRow === array()) {
+if ($dgStatus === 404 || $dgRow === null) {
     // The same answer for "no such file" and "not yours": telling them apart would let a
     // caller map which keys exist.
     header('HTTP/1.1 404 Not Found');
@@ -44,7 +43,7 @@ if (!is_array($dgRow) || $dgRow === array()) {
     exit;
 }
 
-if (!Access::allows((int)$dgRow['fk_i_item_id'])) {
+if ($dgStatus !== 200) {
     header('HTTP/1.1 403 Forbidden');
     osc_add_flash_error_message(Access::deniedMessage());
 

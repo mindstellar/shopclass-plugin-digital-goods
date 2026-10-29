@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.4.0
+
+### New
+
+- A Downloads page in the buyer's account lists the files from paid orders, newest first, with a Downloads entry in the account menu once the buyer has one.
+
+## 2.3.2
+
+### Changed
+
+- Uses core's typed cart and receipt events when core has them; older cores keep the filters.
+
+## 2.3.1
+
+### New
+
+- A paid order's receipt lists the download links.
+- Under the buyer rule, a cart of downloads only asks for no address or delivery.
+
+## 2.3.0
+
+### New
+
+- A "who can download" choice for buyers: anyone with a paid order for the listing, and the seller.
+- Listings in the API carry `ext.digital-goods.downloads` with the links the caller may use.
+
 ## 2.2.0
 
 ### Changed

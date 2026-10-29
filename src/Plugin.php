@@ -19,10 +19,12 @@ namespace mindstellar\digitalgoods;
 class Plugin
 {
     public const PREF_SECTION = 'digital_goods';
+
     public const DEFAULT_EXTENSIONS = 'zip,7z,gz,pdf,epub';
     public const DEFAULT_MAX_FILES = 3;
     public const DEFAULT_MAX_MB = 32;
     public const SHORT_NAME = 'digital-goods';
+    public const DEFAULT_CATEGORY_SLUG = 'digital-goods';
 
     /**
      * The ids of the categories the plugin is switched on for.
@@ -121,6 +123,28 @@ class Plugin
         osc_set_preference('price_credits', '5', self::PREF_SECTION, 'INTEGER');
         osc_set_preference('layout', (string)Storage::LAYOUT, self::PREF_SECTION, 'INTEGER');
         osc_reset_preferences();
+
+        self::tickDefaultCategory();
+    }
+
+    /**
+     * Switch the plugin on for the shop's "Digital Goods" category when the site has one and no
+     * category is chosen yet. A site without it, or with a choice already made, is left alone.
+     *
+     * @return void
+     */
+    public static function tickDefaultCategory()
+    {
+        if (self::categoryIds() !== array()) {
+            return;
+        }
+
+        $category = \Category::getInstance()->findBySlug(self::DEFAULT_CATEGORY_SLUG);
+        if (!is_array($category) || empty($category['pk_i_id'])) {
+            return;
+        }
+
+        \Plugins::addToCategoryPlugin(array((int)$category['pk_i_id']), self::SHORT_NAME);
     }
 
     /**

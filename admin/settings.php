@@ -36,7 +36,7 @@ $notices = static function () use ($d): void {
     }
     if (Plugin::categoryIds() === array()) {
         echo '<div class="flashmessage flashmessage-warning"><p>' . osc_esc_html(__(
-            'Sellers cannot attach files yet. Choose at least one category.',
+            'No category has a file box yet. Tick at least one.',
             $d
         )) . '</p></div>';
     }
@@ -53,6 +53,19 @@ $tree = static function () use ($d): void {
         . 'if (typeof oscTreeview === "function") {'
         . 'oscTreeview(document.getElementById("dg_category_tree"), {collapsed: true});}});</script>';
 };
+
+// Credits are off in a shop, so its owner reads the page as about their own shop.
+$shop = function_exists('osc_is_shop_mode') && osc_is_shop_mode();
+
+$who = array(
+    Access::REGISTERED => __('Signed-in visitors', $d),
+    Access::ANYONE     => __('Anyone', $d),
+);
+// The buyer rule needs a core that records order lines.
+if (Access::buyerRuleWorks()) {
+    $who[Access::BUYER] = $shop ? __('Anyone who bought it', $d) : __('Anyone who bought it, and the seller', $d);
+}
+$who[Access::SELLER] = $shop ? __('Nobody but you', $d) : __('The seller only', $d);
 
 $groups = array(
     array(
@@ -93,12 +106,10 @@ $groups = array(
                 'type'     => 'select',
                 'name'     => 'access',
                 'label'    => __('Who can download', $d),
-                'help'     => __('Sellers can always download their own files.', $d),
-                'options'  => array(
-                    Access::REGISTERED => __('Signed-in visitors', $d),
-                    Access::ANYONE     => __('Anyone', $d),
-                    Access::SELLER     => __('The seller only', $d),
-                ),
+                'help'     => $shop
+                    ? __('You can always download your own files.', $d)
+                    : __('Sellers can always download their own files.', $d),
+                'options'  => $who,
                 'default'  => Access::REGISTERED,
                 'sanitize' => static fn ($v) => in_array($v, Access::rules(), true) ? $v : Access::REGISTERED,
             ),
@@ -151,7 +162,7 @@ $groups = array(
     ),
 );
 
-if (Billing::available()) {
+if (!$shop && Billing::available()) {
     $groups[] = array(
         'title'  => __('Charging', $d),
         'fields' => array(
@@ -175,7 +186,7 @@ if (Billing::available()) {
 
 return array(
     'title'  => __('Digital Goods', $d),
-    // Listed in the plugin's own menu group, beside Downloads.
-    'menu'   => '',
+    // Cores before 7.1 take no settings page under Billing.
+    'menu'   => in_array('billing', \mindstellar\settings\SettingsPageRegistry::MENUS, true) ? 'billing' : 'plugins',
     'groups' => $groups,
 );

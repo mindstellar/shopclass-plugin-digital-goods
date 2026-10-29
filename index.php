@@ -3,7 +3,7 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.2.0
+Version: 2.4.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
@@ -11,6 +11,7 @@ Requires Shopclass: 6.4.0
 Tested up to: 7.0
 Requires PHP: 8.0
 Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issues
+Modes: classifieds, shop
 */
 
 /*
@@ -26,9 +27,13 @@ Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issue
  */
 
 use mindstellar\digitalgoods\Access;
+use mindstellar\digitalgoods\Api;
 use mindstellar\digitalgoods\Billing;
+use mindstellar\digitalgoods\Cart;
+use mindstellar\digitalgoods\Downloads;
 use mindstellar\digitalgoods\Files;
 use mindstellar\digitalgoods\Plugin;
+use mindstellar\digitalgoods\Receipt;
 use mindstellar\digitalgoods\Storage;
 use mindstellar\digitalgoods\Uploads;
 
@@ -233,22 +238,14 @@ function dg_item_detail()
 }
 
 /**
- * Admin menu entries, under the plugin's own heading.
+ * The Downloads list, under Billing (under Settings while billing is switched off).
  *
  * @return void
  */
 function dg_admin_menu()
 {
-    osc_add_admin_submenu_divider('plugins', __('Digital Goods', 'digital-goods'), 'dg_divider', 'administrator');
     osc_add_admin_submenu_page(
-        'plugins',
-        __('Settings', 'digital-goods'),
-        osc_settings_page_url(Plugin::PREF_SECTION),
-        'settings-page-' . Plugin::PREF_SECTION,
-        'administrator'
-    );
-    osc_add_admin_submenu_page(
-        'plugins',
+        'billing',
         __('Downloads', 'digital-goods'),
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',
@@ -271,6 +268,29 @@ osc_add_route(
     'digital-goods/download/{key}',
     osc_plugin_folder(__FILE__) . 'public/download.php'
 );
+
+// The buyer's page of everything bought that comes with files, in the account menu.
+osc_add_route(
+    'digital-goods-downloads',
+    '^digital-goods/downloads/?(?:\?.*)?$',
+    'digital-goods/downloads',
+    osc_plugin_folder(__FILE__) . 'public/downloads.php',
+    true,
+    'custom',
+    'custom',
+    'Downloads'
+);
+osc_add_filter('user_menu_filter', array(Downloads::class, 'menu'));
+
+// On a core with the API, listings carry ext.digital-goods.downloads for the caller.
+Api::register();
+
+// A cart of downloads only needs no address or delivery at checkout.
+// Cores with the typed cart and receipt events get the typed listeners; older ones the filters.
+osc_add_filter('cart_needs_shipping', array(Cart::class, class_exists('mindstellar\\billing\\event\\CartShipping') ? 'onShipping' : 'needsShipping'));
+
+// A paid order's receipt lists the download links.
+osc_add_filter('billing_receipt_details', array(Receipt::class, class_exists('mindstellar\\billing\\event\\ReceiptComposing') ? 'onDetails' : 'details'));
 
 // Registered on init so the feature exists before anything reads the catalogue of what
 // credits buy. A no-op where billing is not present.
