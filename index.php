@@ -7,8 +7,8 @@ Version: 2.4.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
-Requires Shopclass: 6.4.0
-Tested up to: 7.0
+Requires Shopclass: 7.0.0
+Tested up to: 7.1
 Requires PHP: 8.0
 Support URI: https://github.com/mindstellar/shopclass-plugin-digital-goods/issues
 Modes: classifieds, shop

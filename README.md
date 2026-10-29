@@ -6,7 +6,7 @@ Lets a seller attach downloadable files to a listing (a manual, an ebook, a samp
 
 ## Requirements
 
-- Shopclass 6.4.0 or later, tested up to 7.0
+- Shopclass 7.0.0 or later, tested up to 7.1
 - PHP 8.0 or later, with the `fileinfo` extension (on by default)
 - Optional: S3 storage, set up in core under Settings → Storage
 
