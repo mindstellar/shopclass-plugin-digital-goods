@@ -78,7 +78,7 @@ function harness_result(): int
 
 // The typed events are plain classes: load them from a core checkout (SHOPCLASS_CORE, else the sibling one).
 spl_autoload_register(static function (string $class): void {
-    $dir  = rtrim(getenv('SHOPCLASS_CORE') ?: dirname(__DIR__, 3) . '/osclass-aisle-p1', '/') . '/oc-includes/osclass/classes/';
+    $dir  = rtrim(getenv('SHOPCLASS_CORE') ?: dirname(__DIR__, 3) . '/shopclass', '/') . '/oc-includes/osclass/classes/';
     $path = $dir . str_replace('\\', '/', substr($class, 12)) . '.php';
     if (strncmp($class, 'mindstellar\\', 12) === 0 && strncmp($class, 'mindstellar\\digitalgoods\\', 24) !== 0 && is_file($path)) {
         require $path;

@@ -8,7 +8,7 @@
 /**
  * Who may download: each rule, the buyer rule against core's order lines (and its fallback
  * on a core without them), and the listing API field built from the request's credential.
- * Core's API classes are used when a checkout is found (SHOPCLASS_CORE, or ../osclass).
+ * Core's API classes are used when a checkout is found (SHOPCLASS_CORE, or ../shopclass).
  *
  * Usage:  php tests/access.php
  */
@@ -312,7 +312,7 @@ Api::listing(array('id' => 99), new FakeContext(7));
 pin('one more for a single listing outside a page', 2, count($GLOBALS['dg']['queries']));
 pin('other members are left alone', array('id' => 10, 'title' => 'Tee'), array_diff_key(Api::listing(array('id' => 10, 'title' => 'Tee'), new FakeContext(7)), array('ext' => true)));
 
-$core = rtrim((string)(getenv('SHOPCLASS_CORE') ?: dirname(__DIR__, 2) . '/osclass'), '/');
+$core = rtrim((string)(getenv('SHOPCLASS_CORE') ?: dirname(__DIR__, 2) . '/shopclass'), '/');
 if (is_file($core . '/oc-includes/osclass/classes/api/serializer/ViewContext.php')) {
     harness_section('against core\'s API classes');
 
