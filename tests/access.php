@@ -316,13 +316,13 @@ pin('one more for a single listing outside a page', 2, count($GLOBALS['dg']['que
 pin('other members are left alone', array('id' => 10, 'title' => 'Tee'), array_diff_key(Api::listing(array('id' => 10, 'title' => 'Tee'), new FakeContext(7)), array('ext' => true)));
 
 $core = rtrim((string)(getenv('SHOPCLASS_CORE') ?: dirname(__DIR__, 2) . '/shopclass'), '/');
-if (is_file($core . '/oc-includes/osclass/classes/api/serializer/ViewContext.php')) {
+if (is_file(core_class_file($core, 'api/serializer/ViewContext.php'))) {
     harness_section('against core\'s API classes');
 
     spl_autoload_register(static function (string $class) use ($core): void {
         foreach (array('mindstellar\\apikey\\' => 'apikey/', 'mindstellar\\api\\' => 'api/', 'mindstellar\\utility\\' => 'utility/') as $prefix => $dir) {
             if (strncmp($class, $prefix, strlen($prefix)) === 0) {
-                $file = $core . '/oc-includes/osclass/classes/' . $dir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php';
+                $file = core_class_file($core, $dir . str_replace('\\', '/', substr($class, strlen($prefix))) . '.php');
                 if (is_file($file)) {
                     require $file;
                 }
