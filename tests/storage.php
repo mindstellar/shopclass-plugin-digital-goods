@@ -18,7 +18,7 @@ namespace mindstellar\storage {
         /** @var object|null */
         public static $remote = null;
 
-        public static function instance(): self
+        public static function getInstance(): self
         {
             return new self();
         }

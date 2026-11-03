@@ -45,7 +45,7 @@ class Storage
      */
     public static function remote()
     {
-        return StorageManager::instance()->remote();
+        return StorageManager::getInstance()->remote();
     }
 
     /**

@@ -115,7 +115,7 @@ function osc_add_filter($name, $fn, $priority = 5)
 
 class Item
 {
-    public static function newInstance(): self
+    public static function getInstance(): self
     {
         return new self();
     }

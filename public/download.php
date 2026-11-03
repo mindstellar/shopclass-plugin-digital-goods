@@ -50,7 +50,7 @@ if ($dgStatus !== 200) {
     // Back to the listing the file belongs to, so the message lands somewhere with
     // context. osc_item_url() reads the item in the view, so the row is fetched here and
     // passed to the builder that takes one.
-    $dgItem = Item::newInstance()->findByPrimaryKey((int)$dgRow['fk_i_item_id']);
+    $dgItem = Item::getInstance()->findByPrimaryKey((int)$dgRow['fk_i_item_id']);
     osc_redirect_to(is_array($dgItem) && $dgItem !== array()
         ? osc_item_url_from_item($dgItem)
         : osc_base_url());

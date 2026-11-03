@@ -33,11 +33,7 @@ class Plugin
      */
     public static function categoryIds()
     {
-        $dao = method_exists('PluginCategory', 'getInstance')
-            ? \PluginCategory::getInstance()
-            : \PluginCategory::newInstance();
-
-        return array_map('intval', (array)$dao->listSelected(self::SHORT_NAME));
+        return array_map('intval', (array)\PluginCategory::getInstance()->listSelected(self::SHORT_NAME));
     }
 
     /**
@@ -189,7 +185,7 @@ class Plugin
         // The whole section, not a list of the keys this version happens to know about: a
         // setting dropped by some later version would otherwise be left behind for good,
         // with nothing that ever looks at it again.
-        \Preference::newInstance()->delete(array('s_section' => self::PREF_SECTION));
+        \Preference::getInstance()->delete(array('s_section' => self::PREF_SECTION));
         osc_reset_preferences();
     }
 }

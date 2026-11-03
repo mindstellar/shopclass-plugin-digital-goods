@@ -172,7 +172,7 @@ class Access
      */
     private static function ownerOf(int $itemId): ?int
     {
-        $item = Item::newInstance()->findByPrimaryKey($itemId);
+        $item = Item::getInstance()->findByPrimaryKey($itemId);
         if (!is_array($item) || !isset($item['fk_i_user_id'])) {
             return null;
         }

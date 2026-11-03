@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.1
+
+### Changed
+- Uses `getInstance()` in place of the deprecated `newInstance()` and `StorageManager::instance()`.
+
 ## 2.4.0
 
 ### New
