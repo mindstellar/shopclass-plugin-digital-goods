@@ -42,6 +42,7 @@ $dgBuyUrl  = $dgItemId > 0 ? Billing::checkoutUrl($dgItemId) : '';
         <?php } ?>
     </p>
 <?php } else { ?>
+    <div class="meta_list osc-form-fields"><div class="meta">
     <label class="dg-upload__label form-label" for="dg_files">
         <?php echo osc_esc_html(__('Downloadable files', 'digital-goods')); ?>
     </label>
@@ -57,5 +58,6 @@ $dgBuyUrl  = $dgItemId > 0 ? Billing::checkoutUrl($dgItemId) : '';
             implode(', ', $dgExtensions)
         )); ?>
     </p>
+    </div></div>
 <?php } ?>
 </div>
