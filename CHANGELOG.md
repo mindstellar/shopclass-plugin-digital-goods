@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.2
+
+### Fixed
+- The Downloadable files field on the post form uses the theme's field style.
+
 ## 2.4.1
 
 ### Changed
