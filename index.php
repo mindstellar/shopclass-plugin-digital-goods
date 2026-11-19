@@ -238,14 +238,14 @@ function dg_item_detail()
 }
 
 /**
- * The Downloads list, under Billing (under Settings while billing is switched off).
+ * The Downloads list, in the plugin's Plugins group.
  *
  * @return void
  */
 function dg_admin_menu()
 {
     osc_add_admin_submenu_page(
-        'billing',
+        'plugins',
         __('Downloads', 'digital-goods'),
         osc_admin_render_plugin_url(osc_plugin_folder(__FILE__) . 'admin/downloads.php'),
         'dg_downloads',

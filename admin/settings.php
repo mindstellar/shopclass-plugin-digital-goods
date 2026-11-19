@@ -186,7 +186,6 @@ if (!$shop && Billing::available()) {
 
 return array(
     'title'  => __('Digital Goods', $d),
-    // Cores before 7.1 take no settings page under Billing.
-    'menu'   => in_array('billing', \mindstellar\settings\SettingsPageRegistry::MENUS, true) ? 'billing' : 'plugins',
+    'menu'   => 'plugins',
     'groups' => $groups,
 );

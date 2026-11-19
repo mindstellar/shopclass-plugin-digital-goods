@@ -20,13 +20,13 @@ Or run `php oc-cli.php market:install digital-goods`.
 
 ## Set up
 
-1. Open Billing → Digital Goods (Plugins → Digital Goods on cores before 7.1).
+1. Open Plugins → Digital Goods → Settings (Plugins → Digital Goods on Shopclass 7.0).
 2. Under **Categories**, pick the categories that take files.
 3. Under **Files**, set **Who can download**, **Files per listing** (1 to 20), **Largest file (MB)** and **File types**.
 4. Optional, under **Charging**: tick **Charge sellers to attach files** and set **Credits per listing**. It is off by default.
 5. Save. Files now appear on the post and edit forms and on the listing page.
 
-Billing → Downloads lists every attached file, its listing and its download count.
+Plugins → Digital Goods → Downloads (Plugins → Downloads on 7.0) lists every attached file, its listing and its download count.
 
 ## How it works
 
