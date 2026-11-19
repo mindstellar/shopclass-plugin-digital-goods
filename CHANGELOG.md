@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.4.3
+
+### Changed
+- Admin pages are under Plugins → Digital Goods.
+
 ## 2.4.2
 
 ### Fixed
