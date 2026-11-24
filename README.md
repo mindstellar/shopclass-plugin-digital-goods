@@ -107,7 +107,7 @@ The size limit is also capped by what PHP accepts (`upload_max_filesize`).
 ## For developers
 
 - Actions: `init`, `item_form`, `item_edit`, `item_detail`, `posted_item`, `edited_item`, `delete_item`, `admin_menu_init`, `api_listings_prefetch`.
-- Filters: `api_listing`, `cart_needs_shipping` (a cart of downloads asks for no address), `billing_receipt_details` (adds download links to the paid receipt), `user_menu_filter`.
+- Filters: `api_listing`, `cart_needs_shipping` (a cart of downloads asks for no address), `billing_receipt_details` (adds download links to the paid receipt), `user_menu_filter`, `digital_goods_access` (`$allowed, $itemId, $userId, $file`: the rule's answer, then yours; `$file` is the file's row, or null for the listing as a whole).
 - On Shopclass 7.0, API listings carry `ext.digital-goods.downloads`: `[{name, url}]` for callers the rule lets in, an empty list for everyone else.
 
 ## Support

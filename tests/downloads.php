@@ -102,6 +102,11 @@ namespace {
         return $text;
     }
 
+    function osc_apply_filter($name, $value, ...$args)
+    {
+        return $value;
+    }
+
     function osc_get_preference($name, $section = '')
     {
         return $GLOBALS['dg']['rule'];

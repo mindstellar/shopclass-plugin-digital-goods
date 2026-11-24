@@ -15,7 +15,7 @@
  * only place the access rule is applied and the only place a download is counted.
  *
  * @var array<int,array<string,mixed>> $dgFiles
- * @var bool                           $dgAllowed
+ * @var array<int,bool>               $dgAllowed  file id => may download
  */
 
 use mindstellar\digitalgoods\Uploads;
@@ -30,7 +30,7 @@ if (!defined('ABS_PATH')) {
     <ul class="dg-files__list">
         <?php foreach ($dgFiles as $dgFile) { ?>
             <li class="dg-files__item">
-                <?php if ($dgAllowed) { ?>
+                <?php if (!empty($dgAllowed[(int)$dgFile['pk_i_id']])) { ?>
                     <a class="dg-files__link"
                        href="<?php echo osc_esc_html(osc_route_url('digital-goods-download', array('key' => $dgFile['s_token']))); ?>"
                        rel="nofollow">
@@ -46,7 +46,7 @@ if (!defined('ABS_PATH')) {
         <?php } ?>
     </ul>
 
-    <?php if (!$dgAllowed) { ?>
+    <?php if (in_array(false, $dgAllowed, true)) { ?>
         <p class="dg-files__denied"><?php echo osc_esc_html(mindstellar\digitalgoods\Access::deniedMessage()); ?></p>
     <?php } ?>
 </div>

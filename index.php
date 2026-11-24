@@ -3,7 +3,7 @@
 Plugin Name: Digital Goods
 Plugin URI: https://github.com/mindstellar/shopclass-plugin-digital-goods
 Description: Let sellers attach downloadable files to a listing, stored privately and served through a gated link.
-Version: 2.4.3
+Version: 2.5.0
 Author: Navjot Tomer (Mindstellar)
 Author URI: https://mindstellar.com
 Short Name: digital-goods
@@ -233,7 +233,10 @@ function dg_item_detail()
         return;
     }
 
-    $dgAllowed = Access::allows((int)osc_item_id());
+    $dgAllowed = array();
+    foreach ($dgFiles as $dgFile) {
+        $dgAllowed[(int)$dgFile['pk_i_id']] = Access::allowsFile((int)osc_item_id(), $dgFile);
+    }
     require __DIR__ . '/public/item-detail.php';
 }
 

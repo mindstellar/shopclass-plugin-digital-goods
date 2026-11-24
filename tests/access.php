@@ -40,6 +40,7 @@ $GLOBALS['dg'] = array(
     'queries'    => array(),
     'rows'       => array(),
     'hooks'      => array(),
+    'listeners'  => array(),
 );
 
 function __($text, $domain = '')
@@ -50,6 +51,15 @@ function __($text, $domain = '')
 function osc_get_preference($name, $section = '')
 {
     return $name === 'access' ? $GLOBALS['dg']['rule'] : '';
+}
+
+function osc_apply_filter(string $name, $value, ...$args)
+{
+    foreach ($GLOBALS['dg']['listeners'][$name] ?? array() as $fn) {
+        $value = $fn($value, ...$args);
+    }
+
+    return $value;
 }
 
 function osc_is_web_user_logged_in()
@@ -242,6 +252,57 @@ check('the route asks forKey() and serves only a 200', (static function (): bool
     return $gate !== false && $serve !== false && $gate < $serve && str_contains($src, 'if ($dgStatus !== 200) {') && substr_count($src, 'Files::byToken') === 0;
 })());
 $GLOBALS['dg']['rows'] = array();
+
+harness_section('the digital_goods_access filter');
+
+pin('the filter has a name other plugins can read', 'digital_goods_access', Access::FILTER);
+$GLOBALS['dg']['rule'] = Access::BUYER;
+$GLOBALS['dg']['paid'] = array(array(7, 10));
+$GLOBALS['dg']['rows'] = array(
+    array('pk_i_id' => 1, 'fk_i_item_id' => 10, 's_name' => 'Guide.pdf', 's_token' => str_repeat('a', 32)),
+);
+$listen = static function (callable $fn): void {
+    $GLOBALS['dg']['listeners'][Access::FILTER] = array($fn);
+};
+$GLOBALS['dg']['listeners'] = array();
+pin('no listener: the buyer is let in', array(200, 1), $route(7, str_repeat('a', 32)));
+pin('no listener: a stranger is still refused', array(403, 1), $route(8, str_repeat('a', 32)));
+$listen(static fn ($allowed) => false);
+pin('a listener that says no turns the buyer\'s 200 into 403', array(403, 1), $route(7, str_repeat('a', 32)));
+$listen(static fn ($allowed) => true);
+pin('a listener that says yes lets in a signed-in user with no order', array(200, 1), $route(8, str_repeat('a', 32)));
+$seen = array();
+$listen(static function ($allowed, $itemId, $userId, $file) use (&$seen) {
+    $seen[] = array($allowed, $itemId, $userId, $file === null ? null : $file['pk_i_id']);
+
+    return $allowed;
+});
+$route(7, str_repeat('a', 32));
+$route(8, str_repeat('a', 32));
+pin('the listener gets the rule\'s answer, listing, user and the file row', array(array(true, 10, 7, 1), array(false, 10, 8, 1)), $seen);
+$seen = array();
+$GLOBALS['dg']['user'] = 7;
+Access::allows(10);
+pin('and null for the listing as a whole', array(array(true, 10, 7, null)), $seen);
+$listen(static fn ($allowed) => 'yes');
+$GLOBALS['dg']['user'] = 8;
+pin('a non-bool answer is cast', true, Access::allows(10));
+$listen(static fn ($allowed) => 0);
+$GLOBALS['dg']['user'] = 7;
+pin('a falsy non-bool answer is cast', false, Access::allows(10));
+
+$GLOBALS['dg']['rows'] = array(
+    array('pk_i_id' => 1, 'fk_i_item_id' => 10, 's_name' => 'Guide.pdf', 's_token' => str_repeat('a', 32), 'fk_i_user_id' => 5, 'fk_i_category_id' => 3),
+    array('pk_i_id' => 2, 'fk_i_item_id' => 10, 's_name' => 'Extras.zip', 's_token' => str_repeat('b', 32), 'fk_i_user_id' => 5, 'fk_i_category_id' => 3),
+);
+$listen(static fn ($allowed, $itemId, $userId, $file) => $allowed && $file['pk_i_id'] !== 2);
+pin('a listener that refuses one of two files drops only that one from the API list', array(
+    array('name' => 'Guide.pdf', 'url' => 'https://shop.test/digital-goods/download/' . str_repeat('a', 32)),
+), Api::downloads($GLOBALS['dg']['rows'], 7));
+$GLOBALS['dg']['listeners'] = array();
+pin('with no listener both stay', 2, count(Api::downloads($GLOBALS['dg']['rows'], 7)));
+$GLOBALS['dg']['rows'] = array();
+$GLOBALS['dg']['paid'] = array();
 
 harness_section('a cart of downloads');
 

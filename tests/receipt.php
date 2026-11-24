@@ -44,6 +44,11 @@ function __($text, $domain = '')
     return $text;
 }
 
+function osc_apply_filter($name, $value, ...$args)
+{
+    return $value;
+}
+
 function osc_get_preference($name, $section = '')
 {
     return $name === 'access' ? $GLOBALS['dg']['rule'] : '';

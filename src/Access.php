@@ -30,6 +30,9 @@ class Access
     public const BUYER = 'buyer';
     public const SELLER = 'seller';
 
+    /** Filter: `osc_apply_filter(FILTER, bool $allowed, int $itemId, int $userId, ?array $file)`. */
+    public const FILTER = 'digital_goods_access';
+
     /**
      * @return string[]
      */
@@ -78,7 +81,7 @@ class Access
         if (!is_array($row) || $row === array()) {
             return array(404, null);
         }
-        if (!self::allows((int)$row['fk_i_item_id'])) {
+        if (!self::allowsFile((int)$row['fk_i_item_id'], $row)) {
             return array(403, $row);
         }
 
@@ -94,6 +97,20 @@ class Access
      */
     public static function allows($itemId)
     {
+        return self::allowsFile((int)$itemId, null);
+    }
+
+    /**
+     * Whether the current visitor may download one file of a listing, or the listing's
+     * files as a whole when no row is given.
+     *
+     * @param int                       $itemId
+     * @param array<string,mixed>|null $file
+     *
+     * @return bool
+     */
+    public static function allowsFile($itemId, ?array $file)
+    {
         $itemId = (int)$itemId;
         if ($itemId <= 0) {
             return false;
@@ -101,7 +118,24 @@ class Access
 
         $userId = osc_is_web_user_logged_in() ? (int)osc_logged_user_id() : 0;
 
-        return self::decide(self::rule(), $itemId, $userId, self::ownerOf($itemId));
+        return self::answer($itemId, $userId, self::ownerOf($itemId), $file);
+    }
+
+    /**
+     * The rule's answer, then the filter's.
+     *
+     * @param int                       $itemId
+     * @param int                       $userId  0 for a visitor who is not signed in
+     * @param int|null                  $ownerId
+     * @param array<string,mixed>|null $file
+     *
+     * @return bool
+     */
+    public static function answer(int $itemId, int $userId, ?int $ownerId, ?array $file): bool
+    {
+        $allowed = self::decide(self::rule(), $itemId, $userId, $ownerId);
+
+        return (bool)osc_apply_filter(self::FILTER, $allowed, $itemId, $userId, $file);
     }
 
     /**

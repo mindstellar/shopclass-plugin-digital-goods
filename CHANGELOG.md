@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.0
+
+### New
+- Other plugins can allow or refuse a download with the `digital_goods_access` filter.
+
 ## 2.4.3
 
 ### Changed

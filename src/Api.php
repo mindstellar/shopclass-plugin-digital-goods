@@ -117,13 +117,15 @@ final class Api
         $first  = $rows[0];
         $itemId = (int)$first['fk_i_item_id'];
         $owner  = $first['fk_i_user_id'] === null ? null : (int)$first['fk_i_user_id'];
-        if (!self::categoryOn((int)$first['fk_i_category_id'])
-            || !Access::decide(Access::rule(), $itemId, $userId, $owner)) {
+        if (!self::categoryOn((int)$first['fk_i_category_id'])) {
             return array();
         }
 
         $out = array();
         foreach ($rows as $row) {
+            if (!Access::answer($itemId, $userId, $owner, $row)) {
+                continue;
+            }
             $out[] = array(
                 'name' => (string)$row['s_name'],
                 'url'  => (string)osc_route_url('digital-goods-download', array('key' => (string)$row['s_token'])),
