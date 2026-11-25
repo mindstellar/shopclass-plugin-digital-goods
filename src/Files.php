@@ -111,7 +111,7 @@ class Files
         }
 
         $rows = osc_db_select(
-            'SELECT f.fk_i_item_id, f.s_name, f.s_token, i.fk_i_user_id, i.fk_i_category_id'
+            'SELECT f.pk_i_id, f.fk_i_item_id, f.s_name, f.s_token, i.fk_i_user_id, i.fk_i_category_id'
             . ' FROM ' . self::table() . ' f'
             . ' JOIN ' . DB_TABLE_PREFIX . 't_item i ON i.pk_i_id = f.fk_i_item_id'
             . ' WHERE f.fk_i_item_id IN (' . implode(',', array_fill(0, count($itemIds), '?')) . ')'
